@@ -140,6 +140,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="geo.h" />
+    <ClInclude Include="input_reader.h" />
+    <ClInclude Include="stat_reader.h" />
+    <ClInclude Include="transport_catalogue.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="input_reader.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="stat_reader.cpp" />
+    <ClCompile Include="transport_catalogue.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
