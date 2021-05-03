@@ -1,29 +1,42 @@
-﻿#include <exception>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <utility>
-#include <vector>
+﻿#include <stdexcept>
 
 #include "stat_reader.h"
 
-void ProcessStatQueries(const TransportCatalogue& transport_catalogue, std::istream& is, std::ostream& os) {
-	using namespace std::literals;
-	std::string query_count;
-	std::getline(is, query_count);
-	int n = std::stoi(query_count);
-	std::vector<std::string> queries(n);
-	for (auto& query : queries) {
-		std::getline(is, query);
-	}
-	for (std::string_view query : queries) {
-		const auto space_pos = query.find(' ');
-		const std::string_view query_type = query.substr(0, space_pos);
-		query.remove_prefix(space_pos + 1);
-		if (query_type == "Bus"sv) {
-			os << "Bus "s << query << ": "s;
-			const std::optional<BusInfo> bus_info = transport_catalogue.GetBusInfo(query);
-			if (bus_info.has_value()) {				
+namespace transport_catalogue {
+
+	namespace stat {
+
+		void ProcessStat(const TransportCatalogue& catalogue, std::istream& is, std::ostream& os) {
+			using namespace std::literals;
+			std::string query_count;
+			std::getline(is, query_count);
+			int n = std::stoi(query_count);
+			std::vector<std::string> raw_query_lines(n);
+			for (auto& query_line : raw_query_lines) {
+				std::getline(is, query_line);
+			}
+			for (std::string_view query : raw_query_lines) {
+				auto pos = query.find(' ');
+				const std::string_view query_type = query.substr(0, pos);
+				query.remove_prefix(pos + 1);
+				if (query_type == "Bus"sv) {
+					PrintBusInfo(query, catalogue, os);
+				}
+				else if (query_type == "Stop"sv) {
+					PrintStopInfo(query, catalogue, os);
+				}
+				else {
+					throw std::invalid_argument("Unknown query type: "s + std::string(query_type));
+				}
+			}
+
+		}
+
+		void PrintBusInfo(std::string_view bus_number, const TransportCatalogue& catalogue, std::ostream& os) {
+			using namespace std::literals;
+			os << "Bus "s << bus_number << ": "s;
+			const auto bus_info = catalogue.GetBusInfo(bus_number);
+			if (bus_info.has_value()) {
 				os << bus_info.value();
 			}
 			else {
@@ -31,27 +44,20 @@ void ProcessStatQueries(const TransportCatalogue& transport_catalogue, std::istr
 			}
 			os << '\n';
 		}
-		else if (query_type == "Stop"sv) {
-			os << "Stop "s << query << ": "s;
-			const auto bus_numbers = transport_catalogue.GetBusListForStop(query);
-			if (bus_numbers) {
-				if (bus_numbers->empty()) {
-					os << "no buses"s;
-				}
-				else {
-					os << "buses"s;
-					for (const auto bus_number : *bus_numbers) {
-						os << " "s << bus_number;
-					}
-				}
+
+		void PrintStopInfo(std::string_view stop_name, const TransportCatalogue& catalogue, std::ostream& os) {
+			using namespace std::literals;
+			os << "Stop "s << stop_name << ": "s;
+			const auto stop_info = catalogue.GetStopInfo(stop_name);
+			if (stop_info.has_value()) {
+				os << stop_info.value();
 			}
 			else {
 				os << "not found"s;
 			}
 			os << '\n';
 		}
-		else {
-			throw std::invalid_argument("Unkown query type: "s + std::string(query_type));
-		}
+
 	}
+
 }

@@ -1,29 +1,48 @@
 ﻿#pragma once
 
+#include <cstddef>
 #include <iostream>
 #include <list>
+#include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
+#include "geo.h"
 #include "transport_catalogue.h"
 
-struct StopQuery {
-	Stop stop;
-	std::list<std::pair<std::string, std::size_t>> distances;
+namespace transport_catalogue {
 
-};
+	namespace input {
 
-struct InputQueries {
-	std::list<StopQuery> stop_queries;
-	std::list<Bus> bus_queries;
-};
+		struct Stop {
+			std::string_view name;
+			Coordinates coordintes;
+			std::list<std::pair<std::string_view, std::size_t>> distances;
+		};
 
-InputQueries ReadInputQueries(std::istream& is = std::cin);
+		struct Bus {
+			detail::BusType type;
+			std::string_view number;
+			std::list<std::string_view> stop_names;
+		};
 
-StopQuery ParseStopQuery(std::string_view stop_query);
+		struct Queries {
+			std::list<Stop> stops;
+			std::list<Bus> buses;
+			std::vector<std::string> raw_query_lines;
+		};
 
-Bus ParseBusQuery(std::string_view bus_query);
+		Queries ReadInput(std::istream& is = std::cin);
 
-std::pair<std::string, std::size_t> ParseDistance(std::string_view stop_name_distance);
+		Stop ParseStop(std::string_view stop_query);
 
-void UpdateDatabase(const InputQueries& input_queries, TransportCatalogue& transport_catalogue);
+		Bus ParseBus(std::string_view bus_query);
+
+		std::pair<std::string_view, std::size_t> ParseDistance(std::string_view distance_query);
+
+		void UpdateDatabase(const Queries& queries, TransportCatalogue& catalogue);
+
+	}
+
+}

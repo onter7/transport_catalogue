@@ -1,13 +1,14 @@
-﻿#include "input_reader.h"
+﻿#include "transport_catalogue.h"
+#include "input_reader.h"
 #include "stat_reader.h"
-#include "transport_catalogue.h"
 
 using namespace std;
 
-int main() {	
-	TransportCatalogue transport_catalogue;
-	const InputQueries iq = ReadInputQueries();
-	UpdateDatabase(iq, transport_catalogue);
-	ProcessStatQueries(transport_catalogue);
+int main() {
+	const transport_catalogue::input::Queries input_queries = transport_catalogue::input::ReadInput();
+	transport_catalogue::TransportCatalogue catalogue;
+	transport_catalogue::input::UpdateDatabase(input_queries, catalogue);
+	transport_catalogue::stat::ProcessStat(catalogue);
+
 	return 0;
 }
