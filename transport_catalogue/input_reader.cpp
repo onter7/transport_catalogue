@@ -97,7 +97,7 @@ namespace transport_catalogue {
 				}
 			}
 			for (const auto& bus : queries.buses) {
-				catalogue.AddBus(bus.type, bus.number, bus.stop_names);
+				catalogue.AddBus(bus.type, bus.number, { bus.stop_names.begin(), bus.stop_names.end() });
 			}
 		}
 

@@ -33,30 +33,22 @@ namespace transport_catalogue {
 
 	}
 
-	void TransportCatalogue::AddStop(const std::string_view stop_name, const Coordinates& coordinates) {
+	void TransportCatalogue::AddStop(const std::string_view stop_name, const detail::Coordinates& coordinates) {
 		stops_.push_back({ std::string(stop_name), coordinates });
 		const detail::Stop& stop = stops_.back();
 		stop_name_to_stop_[stop.name] = &stop;
 		stop_to_bus_numbers_[&stop];
 	}
 
-	void TransportCatalogue::AddBus(const detail::BusType type, const std::string_view bus_number, const std::list<std::string_view>& stop_names) {
-		buses_.push_back({});
-		detail::Bus& bus = buses_.back();
-		bus.type = type;
-		bus.number = std::string(bus_number);
-		bus.stops_on_route = type == detail::BusType::CIRCULAR
-			? stop_names.size()
-			: stop_names.size() * 2 - 1;
-		bus.unique_stops = std::unordered_set<std::string_view>(stop_names.begin(), stop_names.end()).size();
+	void TransportCatalogue::AddBus(const detail::BusType type, const std::string_view bus_number, const std::vector<std::string_view>& stop_names) {
+		buses_.push_back({ type, std::string(bus_number), {} });
+		detail::Bus& bus = buses_.back();		
 		bus.stops.reserve(stop_names.size());
 		for (const auto& stop_name : stop_names) {
 			const detail::Stop* stop = stop_name_to_stop_.at(stop_name);
 			bus.stops.push_back(stop);
 			stop_to_bus_numbers_[stop].insert(bus.number);
 		}
-		bus.geo_route_length = ComputeGeoRouteLength(bus);
-		bus.actual_route_length = ComputeActualRouteLength(bus);
 		bus_number_to_bus_[bus.number] = &bus;
 	}
 
@@ -73,7 +65,16 @@ namespace transport_catalogue {
 			return std::nullopt;
 		}
 		const detail::Bus& bus = *bus_number_to_bus_.at(bus_number);
-		return std::make_optional<detail::BusInfo>({ bus.stops_on_route, bus.unique_stops, bus.actual_route_length, bus.actual_route_length / bus.geo_route_length });
+		const std::size_t stops_on_route = bus.type == detail::BusType::CIRCULAR
+			? bus.stops.size()
+			: bus.stops.size() * 2 - 1;
+		std::unordered_set<std::string_view> unique_stops;
+		for (const detail::Stop* stop : bus.stops) {
+			unique_stops.insert(std::string_view(stop->name));
+		}
+		const double geo_route_length = ComputeGeoRouteLength(bus);
+		const std::size_t actual_route_length = ComputeActualRouteLength(bus);
+		return std::make_optional<detail::BusInfo>({ stops_on_route, unique_stops.size(), actual_route_length, actual_route_length / geo_route_length });
 	}
 
 	std::optional<detail::StopInfo> TransportCatalogue::GetStopInfo(const std::string_view stop_name) const {
@@ -124,7 +125,7 @@ namespace transport_catalogue {
 		return result;
 	}
 
-	std::size_t TransportCatalogue::StopPairHasher::operator()(const std::pair<const detail::Stop*, const detail::Stop*>& stop_pair) const {
-		return hasher(stop_pair.first) + hasher(stop_pair.second) * PRIME_FACTOR;
+	std::size_t detail::StopPairHasher::operator()(const std::pair<const detail::Stop*, const detail::Stop*>& stop_pair) const {
+		return hasher(stop_pair.first) + hasher(stop_pair.second) * 37;
 	}
 }
