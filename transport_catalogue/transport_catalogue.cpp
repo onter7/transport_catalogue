@@ -4,7 +4,7 @@
 
 #include "transport_catalogue.h"
 
-namespace transport_catalogue {	
+namespace transport_catalogue {
 
 	void TransportCatalogue::AddStop(const std::string_view stop_name, const geo::Coordinates& coordinates) {
 		stops_.push_back({ std::string(stop_name), coordinates });
@@ -15,7 +15,7 @@ namespace transport_catalogue {
 
 	void TransportCatalogue::AddBus(const detail::BusType type, const std::string_view bus_number, const std::vector<std::string_view>& stop_names) {
 		buses_.push_back({ type, std::string(bus_number), {} });
-		detail::Bus& bus = buses_.back();		
+		detail::Bus& bus = buses_.back();
 		bus.stops.reserve(stop_names.size());
 		for (const auto& stop_name : stop_names) {
 			const detail::Stop* stop = stop_name_to_stop_.at(stop_name);
