@@ -2,18 +2,14 @@
 
 #include <cmath>
 
-namespace transport_catalogue {
+namespace geo {
 
-	namespace detail {
+	struct Coordinates {
+		double lat;
+		double lng;
+	};
 
-		struct Coordinates {
-			double lat;
-			double lng;
-		};
-
-	}
-
-	inline double ComputeDistance(detail::Coordinates from, detail::Coordinates to) {
+	inline double ComputeDistance(Coordinates from, Coordinates to) {
 		using namespace std;
 		static const double dr = 3.1415926535 / 180.;
 		return acos(sin(from.lat * dr) * sin(to.lat * dr)
@@ -22,5 +18,3 @@ namespace transport_catalogue {
 	}
 
 }
-
-

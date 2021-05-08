@@ -2,8 +2,6 @@
 
 #include <cstddef>
 #include <deque>
-#include <iostream>
-#include <iomanip>
 #include <list>
 #include <optional>
 #include <set>
@@ -25,7 +23,7 @@ namespace transport_catalogue {
 
 		struct Stop {
 			std::string name;
-			Coordinates coordinates;
+			geo::Coordinates coordinates;
 		};
 
 		struct Bus {
@@ -45,10 +43,6 @@ namespace transport_catalogue {
 			std::vector<std::string_view> bus_numbers;
 		};
 
-		std::ostream& operator<<(std::ostream& os, const BusInfo& bus_info);
-
-		std::ostream& operator<<(std::ostream& os, const StopInfo& stop_info);
-
 		struct StopPairHasher {
 			std::size_t operator()(const std::pair<const detail::Stop*, const detail::Stop*>& stop_pair) const;
 			std::hash<const void*> hasher;
@@ -58,7 +52,7 @@ namespace transport_catalogue {
 
 	class TransportCatalogue {
 	public:
-		void AddStop(const std::string_view stop_name, const detail::Coordinates& coordinates);
+		void AddStop(const std::string_view stop_name, const geo::Coordinates& coordinates);
 		void AddBus(const detail::BusType type, const std::string_view bus_number, const std::vector<std::string_view>& stop_names);
 		const detail::Stop* GetStop(const std::string_view stop_name) const;
 		const detail::Bus* GetBus(const std::string_view bus_number) const;

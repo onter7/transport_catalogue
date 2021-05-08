@@ -1,4 +1,7 @@
-﻿#include <stdexcept>
+﻿#include <iomanip>
+#include <string>
+#include <stdexcept>
+#include <vector>
 
 #include "stat_reader.h"
 
@@ -56,6 +59,29 @@ namespace transport_catalogue {
 				os << "not found"s;
 			}
 			os << '\n';
+		}
+
+		std::ostream& operator<<(std::ostream& os, const detail::BusInfo& bus_info) {
+			using namespace std::literals;
+			os << std::setprecision(6);
+			return os << bus_info.stops_on_route << " stops on route, "s
+				<< bus_info.unique_stops << " unique stops, "s
+				<< bus_info.route_length << " route length, "s
+				<< bus_info.curvature << " curvature"s;
+		}
+
+		std::ostream& operator<<(std::ostream& os, const detail::StopInfo& stop_info) {
+			using namespace std::literals;
+			if (stop_info.bus_numbers.empty()) {
+				os << "no buses"s;
+			}
+			else {
+				os << "buses"s;
+				for (const auto& bus_number : stop_info.bus_numbers) {
+					os << " "s << bus_number;
+				}
+			}
+			return os;
 		}
 
 	}

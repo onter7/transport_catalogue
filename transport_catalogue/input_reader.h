@@ -17,7 +17,7 @@ namespace transport_catalogue {
 
 		struct Stop {
 			std::string_view name;
-			detail::Coordinates coordintes;
+			geo::Coordinates coordintes;
 			std::list<std::pair<std::string_view, std::size_t>> distances;
 		};
 

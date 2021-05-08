@@ -4,36 +4,9 @@
 
 #include "transport_catalogue.h"
 
-namespace transport_catalogue {
+namespace transport_catalogue {	
 
-	namespace detail {
-
-		std::ostream& operator<<(std::ostream& os, const BusInfo& bus_info) {
-			using namespace std::literals;
-			os << std::setprecision(6);
-			return os << bus_info.stops_on_route << " stops on route, "s
-				<< bus_info.unique_stops << " unique stops, "s
-				<< bus_info.route_length << " route length, "s
-				<< bus_info.curvature << " curvature"s;
-		}
-
-		std::ostream& operator<<(std::ostream& os, const StopInfo& stop_info) {
-			using namespace std::literals;
-			if (stop_info.bus_numbers.empty()) {
-				os << "no buses"s;
-			}
-			else {
-				os << "buses"s;
-				for (const auto& bus_number : stop_info.bus_numbers) {
-					os << " "s << bus_number;
-				}
-			}
-			return os;
-		}
-
-	}
-
-	void TransportCatalogue::AddStop(const std::string_view stop_name, const detail::Coordinates& coordinates) {
+	void TransportCatalogue::AddStop(const std::string_view stop_name, const geo::Coordinates& coordinates) {
 		stops_.push_back({ std::string(stop_name), coordinates });
 		const detail::Stop& stop = stops_.back();
 		stop_name_to_stop_[stop.name] = &stop;
