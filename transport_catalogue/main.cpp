@@ -1,14 +1,16 @@
 ﻿#include "transport_catalogue.h"
-#include "input_reader.h"
-#include "stat_reader.h"
+#include "json_reader.h"
 
 using namespace std;
+using namespace transport_catalogue;
 
 int main() {
-	const transport_catalogue::input::Queries input_queries = transport_catalogue::input::ReadInput();
-	transport_catalogue::TransportCatalogue catalogue;
-	transport_catalogue::input::UpdateDatabase(input_queries, catalogue);
-	transport_catalogue::stat::ProcessStat(catalogue);
+
+	json_reader::JsonReader reader;
+	TransportCatalogue db;
+	reader.UpdateDatabase(db);
+	request_handler::RequestHandler rh{ db };
+	reader.ProcessStat(rh);
 
 	return 0;
 }
