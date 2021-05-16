@@ -14,9 +14,10 @@ namespace transport_catalogue {
 
 		JsonReader::JsonReader(std::istream& input)
 			: doc_(json::Load(input)) {
+			UpdateDatabase();
 		}
 
-		void JsonReader::UpdateDatabase(TransportCatalogue& db) {
+		void JsonReader::UpdateDatabase() {
 			const json::Dict& all_requests = doc_.GetRoot().AsMap();
 			std::list<const json::Node*> stops;
 			std::list<const json::Node*> buses;
@@ -34,27 +35,27 @@ namespace transport_catalogue {
 					}
 				}
 			}
-			AddStops(db, stops);
-			AddBuses(db, buses);
+			AddStops(stops);
+			AddBuses(buses);
 		}
 
-		void JsonReader::AddStops(TransportCatalogue& db, const std::list<const json::Node*> stops) {
+		void JsonReader::AddStops(const std::list<const json::Node*> stops) {
 			for (const auto stop : stops) {
 				const json::Dict& stop_dict = stop->AsMap();
-				db.AddStop(stop_dict.at("name"s).AsString(), { stop_dict.at("latitude"s).AsDouble(), stop_dict.at("longitude"s).AsDouble() });
+				db_.AddStop(stop_dict.at("name"s).AsString(), { stop_dict.at("latitude"s).AsDouble(), stop_dict.at("longitude"s).AsDouble() });
 			}
 			for (const auto stop : stops) {
 				const json::Dict& stop_dict = stop->AsMap();
 				const std::string_view from = stop_dict.at("name"s).AsString();
 				if (stop_dict.count("road_distances"s)) {
 					for (const auto& [to, distance] : stop_dict.at("road_distances"s).AsMap()) {
-						db.SetDistanceBetweenStops(from, to, static_cast<std::size_t>(distance.AsInt()));
+						db_.SetDistanceBetweenStops(from, to, static_cast<std::size_t>(distance.AsInt()));
 					}
 				}
 			}
 		}
 
-		void JsonReader::AddBuses(TransportCatalogue& db, const std::list<const json::Node*> buses) {
+		void JsonReader::AddBuses(const std::list<const json::Node*> buses) {
 			for (const auto bus : buses) {
 				const json::Dict& bus_dict = bus->AsMap();
 				const json::Array& stops = bus_dict.at("stops"s).AsArray();
@@ -66,11 +67,12 @@ namespace transport_catalogue {
 				const domain::BusType bus_type = bus_dict.at("is_roundtrip"s).AsBool()
 					? domain::BusType::CIRCULAR
 					: domain::BusType::DIRECT;
-				db.AddBus(bus_type, bus_dict.at("name"s).AsString(), stop_names);
+				db_.AddBus(bus_type, bus_dict.at("name"s).AsString(), stop_names);
 			}
 		}
 
-		void JsonReader::ProcessStat(const request_handler::RequestHandler& handler, std::ostream& output) {
+		void JsonReader::ProcessStat(std::ostream& output) {
+			request_handler::RequestHandler handler{ db_ };
 			const json::Dict& all_requests = doc_.GetRoot().AsMap();
 			json::Array response;
 			if (all_requests.count("stat_requests"s)) {
