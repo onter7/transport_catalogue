@@ -2,7 +2,7 @@
 
 #include <cstddef>
 #include <string>
-#include <string_view>
+#include <utility>
 #include <vector>
 
 #include "geo.h"
@@ -10,6 +10,9 @@
 namespace transport_catalogue {
 
 	namespace domain {
+
+		struct Stop;
+		struct Bus;		
 
 		enum class BusType {
 			CIRCULAR,

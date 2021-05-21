@@ -33,6 +33,24 @@ namespace transport_catalogue {
 		return bus_name_to_bus_.count(bus_name) ? bus_name_to_bus_.at(bus_name) : nullptr;
 	}
 
+	std::vector<std::pair<const domain::Stop*, std::size_t>> TransportCatalogue::GetStopsToBusCounts() const {
+		std::vector<std::pair<const domain::Stop*, std::size_t>> result;
+		result.reserve(stops_.size());
+		for (const auto [stop, buses] : stop_to_buses_) {
+			result.push_back(std::make_pair(stop, buses.size()));
+		}		
+		return result;
+	}
+
+	std::vector<const domain::Bus*> TransportCatalogue::GetBuses() const {
+		std::vector<const domain::Bus*> result;
+		result.reserve(buses_.size());
+		for (const auto& bus : buses_) {
+			result.push_back(&bus);
+		}		
+		return result;
+	}
+
 	std::optional<domain::BusStat> TransportCatalogue::GetBusStat(const std::string_view bus_name) const {
 		if (!bus_name_to_bus_.count(bus_name)) {
 			return std::nullopt;

@@ -31,29 +31,10 @@ namespace svg {
 
 	struct ColorPrinter {
 		std::ostream& out;
-		void operator()(std::monostate) const {
-			out << std::get<std::string>(svg::NoneColor);
-		}
-		void operator()(const std::string& color) const {
-			out << color;
-		}
-		void operator()(const svg::Rgb& color) const {
-			using namespace std::literals;
-			out << "rgb("sv
-				<< static_cast<int>(color.red) << ","sv
-				<< static_cast<int>(color.green) << ","sv
-				<< static_cast<int>(color.blue)
-				<< ")"sv;
-		}
-		void operator()(const svg::Rgba& color) const {
-			using namespace std::literals;
-			out << "rgba("sv
-				<< static_cast<int>(color.red) << ","sv
-				<< static_cast<int>(color.green) << ","sv
-				<< static_cast<int>(color.blue) << ","sv
-				<< color.opacity
-				<< ")"sv;
-		}
+		void operator()(std::monostate) const;
+		void operator()(const std::string& color) const;
+		void operator()(const svg::Rgb& color) const;
+		void operator()(const svg::Rgba& color) const;
 	};
 
 	std::ostream& operator<<(std::ostream& os, const svg::Color& color);
@@ -198,6 +179,8 @@ namespace svg {
 		void Add(Obj obj) {
 			objects_.emplace_back(std::make_unique<Obj>(std::move(obj)));
 		}
+		ObjectContainer() = default;
+		ObjectContainer(ObjectContainer&& other) noexcept;
 		virtual void AddPtr(std::unique_ptr<Object>&& obj) = 0;
 		virtual ~ObjectContainer() = default;
 	protected:

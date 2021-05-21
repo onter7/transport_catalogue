@@ -15,6 +15,33 @@ namespace svg {
 		, opacity(o) {
 	}
 
+	void ColorPrinter::operator()(std::monostate) const {
+		out << std::get<std::string>(svg::NoneColor);
+	}
+
+	void ColorPrinter::operator()(const std::string& color) const {
+		out << color;
+	}
+
+	void ColorPrinter::operator()(const svg::Rgb& color) const {
+		using namespace std::literals;
+		out << "rgb("sv
+			<< static_cast<int>(color.red) << ","sv
+			<< static_cast<int>(color.green) << ","sv
+			<< static_cast<int>(color.blue)
+			<< ")"sv;
+	}
+
+	void ColorPrinter::operator()(const svg::Rgba& color) const {
+		using namespace std::literals;
+		out << "rgba("sv
+			<< static_cast<int>(color.red) << ","sv
+			<< static_cast<int>(color.green) << ","sv
+			<< static_cast<int>(color.blue) << ","sv
+			<< color.opacity
+			<< ")"sv;
+	}
+
 	std::ostream& operator<<(std::ostream& os, const StrokeLineCap line_cap) {
 		switch (line_cap) {
 		case StrokeLineCap::BUTT:
@@ -63,6 +90,10 @@ namespace svg {
 		RenderObject(context);
 
 		context.out << std::endl;
+	}
+
+	ObjectContainer::ObjectContainer(ObjectContainer&& other) noexcept
+		: objects_(std::move(other.objects_)) {
 	}
 
 	// ---------- Circle ------------------    
@@ -193,7 +224,7 @@ namespace svg {
 		for (const auto& obj : objects_) {
 			obj->Render({ out, 1, 2 });
 		}
-		out << "</svg>"sv << std::endl;
+		out << "</svg>"sv;
 	}
 
 }  // namespace svg
