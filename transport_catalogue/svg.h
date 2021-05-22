@@ -126,6 +126,7 @@ namespace svg {
 		}
 
 		virtual ~PathProps() = default;
+
 	protected:
 		void RenderAttrs(std::ostream& out) const {
 			using namespace std::literals;

@@ -1,8 +1,10 @@
 ﻿#pragma once
 
+#include <cstddef>
 #include <optional>
 #include <string_view>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "domain.h"

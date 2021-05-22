@@ -2,13 +2,14 @@
 
 #include <cstddef>
 #include <deque>
+#include <functional>
 #include <list>
 #include <optional>
-#include <string>
 #include <string_view>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 #include "geo.h"
 #include "domain.h"

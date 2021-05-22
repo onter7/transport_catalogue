@@ -3,8 +3,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <vector>
 #include <optional>
+#include <vector>
+#include <utility>
 
 #include "domain.h"
 #include "geo.h"
@@ -92,11 +93,12 @@ namespace transport_catalogue {
 			svg::Document RenderMap(std::vector<std::pair<const domain::Stop*, std::size_t>>& stops_to_bus_counts, std::vector<const domain::Bus*>& buses) const;
 			void SetRenderSettings(const RenderSettings& settings);
 		private:
+			std::optional<RenderSettings> settings_;
+
 			void RenderBusRoutes(svg::Document& doc, const SphereProjector& projector, const std::vector<const domain::Bus*>& buses) const;
 			void RenderBusNames(svg::Document& doc, const SphereProjector& projector, const std::vector<const domain::Bus*>& buses) const;
 			void RenderStopCircles(svg::Document& doc, const SphereProjector& projector, const std::vector<std::pair<const domain::Stop*, std::size_t>>& stops_to_bus_counts) const;
 			void RenderStopNames(svg::Document& doc, const SphereProjector& projector, const std::vector<std::pair<const domain::Stop*, std::size_t>>& stops_to_bus_counts) const;
-			std::optional<RenderSettings> settings_;
 		};
 
 	}

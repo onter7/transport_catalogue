@@ -1,6 +1,4 @@
-﻿#include <algorithm>
-#include <cstddef>
-#include <utility>
+﻿#include <cstddef>
 
 #include "map_renderer.h"
 

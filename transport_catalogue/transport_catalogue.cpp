@@ -1,6 +1,4 @@
 ﻿#include <algorithm>
-#include <cstddef>
-#include <unordered_set>
 
 #include "transport_catalogue.h"
 
@@ -38,7 +36,7 @@ namespace transport_catalogue {
 		result.reserve(stops_.size());
 		for (const auto [stop, buses] : stop_to_buses_) {
 			result.push_back(std::make_pair(stop, buses.size()));
-		}		
+		}
 		return result;
 	}
 
@@ -47,7 +45,7 @@ namespace transport_catalogue {
 		result.reserve(buses_.size());
 		for (const auto& bus : buses_) {
 			result.push_back(&bus);
-		}		
+		}
 		return result;
 	}
 
