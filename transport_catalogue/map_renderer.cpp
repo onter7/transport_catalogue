@@ -22,12 +22,16 @@ namespace transport_catalogue {
 		}
 
 		svg::Document MapRenderer::RenderMap(std::vector<std::pair<const domain::Stop*, std::size_t>>& stops_to_bus_counts, std::vector<const domain::Bus*>& buses) const {
-			std::sort(stops_to_bus_counts.begin(), stops_to_bus_counts.end(), [](const auto& lhs, const auto& rhs) {
-				return std::lexicographical_compare(lhs.first->name.begin(), lhs.first->name.end(), rhs.first->name.begin(), rhs.first->name.end());
-			});
-			std::sort(buses.begin(), buses.end(), [](const domain::Bus* lhs, const domain::Bus* rhs) {
-				return std::lexicographical_compare(lhs->name.begin(), lhs->name.end(), rhs->name.begin(), rhs->name.end());
-			});
+			std::sort(stops_to_bus_counts.begin(), stops_to_bus_counts.end(),
+				[](const auto& lhs, const auto& rhs) {
+					return std::lexicographical_compare(lhs.first->name.begin(), lhs.first->name.end(), rhs.first->name.begin(), rhs.first->name.end());
+				}
+			);
+			std::sort(buses.begin(), buses.end(),
+				[](const domain::Bus* lhs, const domain::Bus* rhs) {
+					return std::lexicographical_compare(lhs->name.begin(), lhs->name.end(), rhs->name.begin(), rhs->name.end());
+				}
+			);
 			std::vector<geo::Coordinates> stop_coordinates;
 			stop_coordinates.reserve(stops_to_bus_counts.size());
 			for (const auto [stop, bus_count] : stops_to_bus_counts) {
@@ -38,9 +42,9 @@ namespace transport_catalogue {
 			const SphereProjector projector(
 				stop_coordinates.begin(),
 				stop_coordinates.end(),
-				(*settings_).width,
-				(*settings_).height,
-				(*settings_).padding);
+				settings_.width,
+				settings_.height,
+				settings_.padding);
 			svg::Document result;
 			RenderBusRoutes(result, projector, buses);
 			RenderBusNames(result, projector, buses);
@@ -57,9 +61,9 @@ namespace transport_catalogue {
 				}
 				svg::Polyline line;
 				line
-					.SetStrokeColor((*settings_).color_palette[current_color_index++])
+					.SetStrokeColor(settings_.color_palette[current_color_index++])
 					.SetFillColor(svg::NoneColor)
-					.SetStrokeWidth((*settings_).line_width)
+					.SetStrokeWidth(settings_.line_width)
 					.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
 					.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
 				for (const auto& stop : bus->stops) {
@@ -71,7 +75,7 @@ namespace transport_catalogue {
 					}
 				}
 				doc.Add(std::move(line));
-				if (current_color_index == (*settings_).color_palette.size()) {
+				if (current_color_index == settings_.color_palette.size()) {
 					current_color_index = 0;
 				}
 			}
@@ -86,21 +90,21 @@ namespace transport_catalogue {
 				svg::Text text;
 				text
 					.SetPosition(projector(bus->stops.front()->coordinates))
-					.SetOffset((*settings_).bus_label_offset)
-					.SetFontSize((*settings_).bus_label_font_size)
+					.SetOffset(settings_.bus_label_offset)
+					.SetFontSize(settings_.bus_label_font_size)
 					.SetFontFamily("Verdana"s)
 					.SetFontWeight("bold"s)
 					.SetData(bus->name);
 				svg::Text substrate = text;
 				substrate
-					.SetFillColor((*settings_).underlayer_color)
-					.SetStrokeColor((*settings_).underlayer_color)
-					.SetStrokeWidth((*settings_).underlayer_width)
+					.SetFillColor(settings_.underlayer_color)
+					.SetStrokeColor(settings_.underlayer_color)
+					.SetStrokeWidth(settings_.underlayer_width)
 					.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
 					.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
 				text
-					.SetFillColor((*settings_).color_palette[current_color_index++]);
-				if (current_color_index == (*settings_).color_palette.size()) {
+					.SetFillColor(settings_.color_palette[current_color_index++]);
+				if (current_color_index == settings_.color_palette.size()) {
 					current_color_index = 0;
 				}
 
@@ -129,7 +133,7 @@ namespace transport_catalogue {
 				svg::Circle circle;
 				circle
 					.SetCenter(projector(stop->coordinates))
-					.SetRadius((*settings_).stop_radius)
+					.SetRadius(settings_.stop_radius)
 					.SetFillColor("white"s);
 				doc.Add(std::move(circle));
 			}
@@ -143,15 +147,15 @@ namespace transport_catalogue {
 				svg::Text text;
 				text
 					.SetPosition(projector(stop->coordinates))
-					.SetOffset((*settings_).stop_label_offset)
-					.SetFontSize((*settings_).stop_label_font_size)
+					.SetOffset(settings_.stop_label_offset)
+					.SetFontSize(settings_.stop_label_font_size)
 					.SetFontFamily("Verdana"s)
 					.SetData(stop->name);
 				svg::Text substrate = text;
 				substrate
-					.SetFillColor((*settings_).underlayer_color)
-					.SetStrokeColor((*settings_).underlayer_color)
-					.SetStrokeWidth((*settings_).underlayer_width)
+					.SetFillColor(settings_.underlayer_color)
+					.SetStrokeColor(settings_.underlayer_color)
+					.SetStrokeWidth(settings_.underlayer_width)
 					.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
 					.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
 				text

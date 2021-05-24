@@ -2,6 +2,10 @@
 
 #include <iostream>
 #include <list>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include "json.h"
 #include "request_handler.h"
@@ -9,6 +13,39 @@
 namespace transport_catalogue {
 
 	namespace json_reader {
+
+		struct Response;
+		struct NotFound;
+		struct Map;
+		struct StopStat;
+		struct BusStat;
+
+		using JsonResponse = std::variant<NotFound, Map, StopStat, BusStat>;
+
+		struct Response {
+			int request_id = 0;
+		};
+
+		struct NotFound : public Response {};
+
+		struct Map : public Response {
+			svg::Document doc;
+		};
+
+		struct StopStat : public Response {
+			const std::unordered_set<const domain::Bus*>* buses;
+		};
+
+		struct BusStat : public Response {
+			std::optional<domain::BusStat> bus_stat;
+		};
+
+		struct ResponseConverter {
+			json::Dict operator()(const NotFound& response) const;
+			json::Dict operator()(const Map& response) const;
+			json::Dict operator()(const StopStat& response) const;
+			json::Dict operator()(const BusStat& response) const;
+		};
 
 		class JsonReader final {
 		public:

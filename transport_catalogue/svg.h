@@ -128,23 +128,21 @@ namespace svg {
 		virtual ~PathProps() = default;
 
 	protected:
+		template <typename AttrType>
+		void RenderAttr(std::ostream& out, const std::string_view attr_name, const std::optional<AttrType>& attr) const {
+			using namespace std::literals;
+			if (attr) {
+				out << " "sv << attr_name << "=\""sv << *attr << "\""sv;
+			}
+		}
+
 		void RenderAttrs(std::ostream& out) const {
 			using namespace std::literals;
-			if (fill_color_) {
-				out << " fill=\""sv << *fill_color_ << "\""sv;
-			}
-			if (stroke_color_) {
-				out << " stroke=\""sv << *stroke_color_ << "\""sv;
-			}
-			if (stroke_width_) {
-				out << " stroke-width=\""sv << *stroke_width_ << "\""sv;
-			}
-			if (stroke_line_cap_) {
-				out << " stroke-linecap=\""sv << *stroke_line_cap_ << "\""sv;
-			}
-			if (stroke_line_join_) {
-				out << " stroke-linejoin=\""sv << *stroke_line_join_ << "\""sv;
-			}
+			RenderAttr(out, "fill"sv, fill_color_);
+			RenderAttr(out, "stroke"sv, stroke_color_);
+			RenderAttr(out, "stroke-width"sv, stroke_width_);
+			RenderAttr(out, "stroke-linecap"sv, stroke_line_cap_);
+			RenderAttr(out, "stroke-linejoin"sv, stroke_line_join_);
 		}
 
 	private:

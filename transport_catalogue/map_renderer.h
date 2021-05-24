@@ -30,15 +30,15 @@ namespace transport_catalogue {
 
 				const auto [left_it, right_it]
 					= std::minmax_element(points_begin, points_end, [](auto lhs, auto rhs) {
-						return lhs.lng < rhs.lng;
-					});
+					return lhs.lng < rhs.lng;
+						});
 				min_lon_ = left_it->lng;
 				const double max_lon = right_it->lng;
 
 				const auto [bottom_it, top_it]
 					= std::minmax_element(points_begin, points_end, [](auto lhs, auto rhs) {
-						return lhs.lat < rhs.lat;
-					});
+					return lhs.lat < rhs.lat;
+						});
 				const double min_lat = bottom_it->lat;
 				max_lat_ = top_it->lat;
 
@@ -72,19 +72,19 @@ namespace transport_catalogue {
 			double zoom_coeff_ = 0;
 		};
 
-		struct RenderSettings {
-			double width = 0.0;
-			double height = 0.0;
-			double padding = 0.0;
-			double line_width = 0.0;
-			double stop_radius = 0.0;
-			std::uint32_t bus_label_font_size = 0;
-			svg::Point bus_label_offset;
-			std::uint32_t stop_label_font_size = 0;
-			svg::Point stop_label_offset;
-			svg::Color underlayer_color;
-			double underlayer_width = 0.0;
-			std::vector<svg::Color> color_palette;
+		struct RenderSettings {			
+			double width = 1200.0;
+			double height = 1200.0;
+			double padding = 50.0;
+			double line_width = 14.0;
+			double stop_radius = 5.0;
+			std::uint32_t bus_label_font_size = 20;
+			svg::Point bus_label_offset{ 7.0, 15.0 };
+			std::uint32_t stop_label_font_size = 20;
+			svg::Point stop_label_offset{ 7.0, -3.0 };
+			svg::Color underlayer_color{ svg::Rgba{ 255, 255, 255, 0.85 } };
+			double underlayer_width = 3.0;
+			std::vector<svg::Color> color_palette{ "green", svg::Rgb{ 255, 160, 0 }, "red" };
 		};
 
 		class MapRenderer {
@@ -93,7 +93,7 @@ namespace transport_catalogue {
 			svg::Document RenderMap(std::vector<std::pair<const domain::Stop*, std::size_t>>& stops_to_bus_counts, std::vector<const domain::Bus*>& buses) const;
 			void SetRenderSettings(const RenderSettings& settings);
 		private:
-			std::optional<RenderSettings> settings_;
+			RenderSettings settings_;
 
 			void RenderBusRoutes(svg::Document& doc, const SphereProjector& projector, const std::vector<const domain::Bus*>& buses) const;
 			void RenderBusNames(svg::Document& doc, const SphereProjector& projector, const std::vector<const domain::Bus*>& buses) const;

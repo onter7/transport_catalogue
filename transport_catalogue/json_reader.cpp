@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 #include <utility>
 
@@ -15,6 +16,53 @@ using namespace std::literals;
 namespace transport_catalogue {
 
 	namespace json_reader {
+
+		using JsonResponse = std::variant<NotFound, Map, StopStat, BusStat>;
+
+		json::Dict ResponseConverter::operator()(const NotFound& response) const {
+			return { { "request_id"s, response.request_id }, { "error_message"s, "not found"s } };
+		}
+
+		json::Dict ResponseConverter::operator()(const Map& response) const {
+			std::stringstream ss;
+			response.doc.Render(ss);
+			return { {"map"s, std::move(ss.str())}, { "request_id"s, response.request_id } };
+		}
+
+		json::Dict ResponseConverter::operator()(const StopStat& response) const {
+			if (response.buses) {
+				json::Array bus_names;
+				bus_names.reserve(response.buses->size());
+				for (const auto bus : *response.buses) {
+					bus_names.push_back(bus->name);
+				}
+				std::sort(bus_names.begin(), bus_names.end(),
+					[](const json::Node& lhs, const json::Node& rhs) {
+						return lhs.AsString() < rhs.AsString();
+					}
+				);
+				return { { "buses"s, bus_names }, { "request_id"s, response.request_id } };
+			}
+			else {
+				return std::visit(ResponseConverter{}, JsonResponse{ NotFound{ response.request_id } });
+			}
+		}
+
+		json::Dict ResponseConverter::operator()(const BusStat& response) const {
+			if (response.bus_stat) {
+				return
+				{
+					{ "curvature"s, (*response.bus_stat).curvature },
+					{ "request_id"s, response.request_id },
+					{ "route_length"s, static_cast<int>((*response.bus_stat).route_length) },
+					{ "stop_count"s, static_cast<int>((*response.bus_stat).stops_on_route) },
+					{ "unique_stop_count"s, static_cast<int>((*response.bus_stat).unique_stops) }
+				};
+			}
+			else {
+				return std::visit(ResponseConverter{}, JsonResponse{ NotFound{ response.request_id } });
+			}
+		}
 
 		JsonReader::JsonReader(request_handler::RequestHandler& handler)
 			: handler_(handler) {
@@ -108,48 +156,20 @@ namespace transport_catalogue {
 		json::Dict JsonReader::GetStopStat(const json::Dict& stop_request) const {
 			const auto buses = handler_.GetBusesByStop(stop_request.at("name"s).AsString());
 			const int request_id = stop_request.at("id"s).AsInt();
-			if (buses) {
-				json::Array bus_names;
-				bus_names.reserve(buses->size());
-				for (const auto bus : *buses) {
-					bus_names.push_back(bus->name);
-				}
-				std::sort(bus_names.begin(), bus_names.end(), [](const json::Node& lhs, const json::Node& rhs) {
-					return lhs.AsString() < rhs.AsString();
-				});
-				return { { "buses"s, bus_names }, { "request_id"s, request_id } };
-			}
-			else {
-				return { { "request_id"s, request_id }, { "error_message"s, "not found"s } };
-			}
+			return std::visit(ResponseConverter{}, JsonResponse{ StopStat{request_id, buses} });
 		}
 
 		json::Dict JsonReader::GetBusStat(const json::Dict& bus_request) const {
 			const auto bus_stat = handler_.GetBusStat(bus_request.at("name"s).AsString());
 			const int request_id = bus_request.at("id"s).AsInt();
-			if (bus_stat) {
-				return
-				{
-					{ "curvature"s, (*bus_stat).curvature },
-					{ "request_id"s, request_id },
-					{ "route_length"s, static_cast<int>((*bus_stat).route_length) },
-					{ "stop_count"s, static_cast<int>((*bus_stat).stops_on_route) },
-					{ "unique_stop_count"s, static_cast<int>((*bus_stat).unique_stops) }
-				};
-			}
-			else {
-				return { { "request_id"s, request_id }, { "error_message"s, "not found"s } };
-			}
+			return std::visit(ResponseConverter{}, JsonResponse{ BusStat{request_id, bus_stat} });
 		}
 
 		json::Dict JsonReader::GetMap(const json::Dict& map_request) const {
 			const int request_id = map_request.at("id"s).AsInt();
 			auto stops_to_bus_counts{ handler_.GetStopsToBuses() };
 			auto buses{ handler_.GetBuses() };
-			const auto map{ handler_.RenderMap(stops_to_bus_counts, buses) };
-			std::stringstream ss;
-			map.Render(ss);
-			return { {"map"s, std::move(ss.str())}, {"request_id"s, request_id } };
+			return std::visit(ResponseConverter{}, JsonResponse{ Map{ request_id, handler_.RenderMap(stops_to_bus_counts, buses) } });
 		}
 
 		renderer::RenderSettings JsonReader::GetRenderSettings(const json::Dict& settings_dict) const {
