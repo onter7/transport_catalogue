@@ -30,15 +30,15 @@ namespace transport_catalogue {
 
 				const auto [left_it, right_it]
 					= std::minmax_element(points_begin, points_end, [](auto lhs, auto rhs) {
-					return lhs.lng < rhs.lng;
-						});
+						return lhs.lng < rhs.lng;
+					});
 				min_lon_ = left_it->lng;
 				const double max_lon = right_it->lng;
 
 				const auto [bottom_it, top_it]
 					= std::minmax_element(points_begin, points_end, [](auto lhs, auto rhs) {
-					return lhs.lat < rhs.lat;
-						});
+						return lhs.lat < rhs.lat;
+					});
 				const double min_lat = bottom_it->lat;
 				max_lat_ = top_it->lat;
 
