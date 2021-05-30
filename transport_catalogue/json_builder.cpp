@@ -32,8 +32,8 @@ namespace json {
 		: Context(builder) {
 	}
 
-	ValueContext ArrayItemContext::Value(json::Node value) {
-		return ValueContext(builder_.Value(value));
+	ArrayValueContext ArrayItemContext::Value(json::Node value) {
+		return ArrayValueContext(builder_.Value(value));
 	}
 
 	DictItemContext ArrayItemContext::StartDict() {
@@ -68,24 +68,24 @@ namespace json {
 
 	// ValueContext
 
-	ValueContext::ValueContext(Builder& builder)
+	ArrayValueContext::ArrayValueContext(Builder& builder)
 		: Context(builder) {
 	}
 
-	ValueContext ValueContext::Value(json::Node value) {
+	ArrayValueContext ArrayValueContext::Value(json::Node value) {
 		builder_.Value(value);
 		return *this;
 	}
 
-	DictItemContext ValueContext::StartDict() {
+	DictItemContext ArrayValueContext::StartDict() {
 		return builder_.StartDict();
 	}
 
-	ArrayItemContext ValueContext::StartArray() {
+	ArrayItemContext ArrayValueContext::StartArray() {
 		return builder_.StartArray();
 	}
 
-	Builder& ValueContext::EndArray() {
+	Builder& ArrayValueContext::EndArray() {
 		return builder_.EndArray();
 	}
 

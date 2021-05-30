@@ -14,7 +14,7 @@ namespace json {
 	class ArrayItemContext;
 	class DictItemContext;
 	class KeyContext;
-	class ValueContext;
+	class ArrayValueContext;
 
 	class Context {
 	protected:
@@ -32,7 +32,7 @@ namespace json {
 	class ArrayItemContext : private Context {
 	public:
 		ArrayItemContext(Builder& builder);
-		ValueContext Value(json::Node value);
+		ArrayValueContext Value(json::Node value);
 		DictItemContext StartDict();
 		ArrayItemContext StartArray();
 		Builder& EndArray();
@@ -46,10 +46,10 @@ namespace json {
 		ArrayItemContext StartArray();
 	};
 
-	class ValueContext : private Context {
+	class ArrayValueContext : private Context {
 	public:
-		ValueContext(Builder& builder);
-		ValueContext Value(json::Node value);
+		ArrayValueContext(Builder& builder);
+		ArrayValueContext Value(json::Node value);
 		DictItemContext StartDict();
 		ArrayItemContext StartArray();
 		Builder& EndArray();
