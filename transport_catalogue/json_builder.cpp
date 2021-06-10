@@ -108,7 +108,7 @@ namespace json {
 					nodes_stack_.push_back(&array.back());
 				}
 			}
-			else if (nodes_stack_.size() > 1 && nodes_stack_[nodes_stack_.size() - 2]->IsDict()) {
+			else if (nodes_stack_.size() > 1u && nodes_stack_[nodes_stack_.size() - 2u]->IsDict()) {
 				*back = std::move(node);
 				if (node_type == NodeType::VALUE) {
 					nodes_stack_.pop_back();

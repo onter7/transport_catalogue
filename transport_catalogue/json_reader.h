@@ -9,6 +9,7 @@
 
 #include "json.h"
 #include "request_handler.h"
+#include "transport_router.h"
 
 namespace transport_catalogue {
 
@@ -19,8 +20,14 @@ namespace transport_catalogue {
 		struct Map;
 		struct StopStat;
 		struct BusStat;
+		struct RouteStat;
 
-		using JsonResponse = std::variant<NotFound, Map, StopStat, BusStat>;
+		struct RouteItemConverter {
+			json::Dict operator()(const domain::BusRouteItem& bus) const;
+			json::Dict operator()(const domain::WaitRouteItem& wait) const;
+		};
+
+		using JsonResponse = std::variant<NotFound, Map, StopStat, BusStat, RouteStat>;
 
 		struct Response {
 			int request_id = 0;
@@ -40,11 +47,16 @@ namespace transport_catalogue {
 			std::optional<domain::BusStat> bus_stat;
 		};
 
+		struct RouteStat : public Response {
+			std::optional<domain::RouteStat> route_stat;
+		};
+
 		struct ResponseConverter {
 			json::Dict operator()(const NotFound& response) const;
 			json::Dict operator()(const Map& response) const;
 			json::Dict operator()(const StopStat& response) const;
 			json::Dict operator()(const BusStat& response) const;
+			json::Dict operator()(const RouteStat& response) const;
 		};
 
 		class JsonReader final {
@@ -61,7 +73,9 @@ namespace transport_catalogue {
 			json::Dict GetMap(const json::Dict& stop_request) const;
 			json::Dict GetStopStat(const json::Dict& stop_request) const;
 			json::Dict GetBusStat(const json::Dict& bus_request) const;
+			json::Dict GetRoute(const json::Dict& route_request) const;
 			static svg::Color GetColor(const json::Node& color_node);
+			transport_router::RoutingSettings GetRoutingSettings(const json::Dict& settings_dict) const;
 		};
 
 	}

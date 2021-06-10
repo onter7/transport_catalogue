@@ -40,6 +40,15 @@ namespace transport_catalogue {
 		return result;
 	}
 
+	std::vector<const domain::Stop*> TransportCatalogue::GetStops() const {
+		std::vector<const domain::Stop*> result;
+		result.reserve(stops_.size());
+		for (const auto& stop : stops_) {
+			result.push_back(&stop);
+		}
+		return result;
+	}
+
 	std::vector<const domain::Bus*> TransportCatalogue::GetBuses() const {
 		std::vector<const domain::Bus*> result;
 		result.reserve(buses_.size());

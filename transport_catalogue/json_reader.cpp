@@ -18,7 +18,30 @@ namespace transport_catalogue {
 
 	namespace json_reader {
 
-		using JsonResponse = std::variant<NotFound, Map, StopStat, BusStat>;
+		json::Dict RouteItemConverter::operator()(const domain::BusRouteItem& bus) const {
+			return
+				json::Builder{}
+					.StartDict()
+						.Key("type"s).Value("Bus"s)
+						.Key("bus"s).Value(std::string(bus.bus_name))
+						.Key("span_count"s).Value(static_cast<int>(bus.span_count))
+						.Key("time"s).Value(bus.time)
+					.EndDict()
+				.Build().AsDict();
+		}
+
+		json::Dict RouteItemConverter::operator()(const domain::WaitRouteItem& wait) const {
+			return
+				json::Builder{}
+					.StartDict()
+						.Key("type"s).Value("Wait"s)
+						.Key("stop_name"s).Value(std::string(wait.stop_name))
+						.Key("time"s).Value(wait.time)
+					.EndDict()
+				.Build().AsDict();
+		}
+
+		using JsonResponse = std::variant<NotFound, Map, StopStat, BusStat, RouteStat>;
 
 		json::Dict ResponseConverter::operator()(const NotFound& response) const {
 			return
@@ -77,6 +100,28 @@ namespace transport_catalogue {
 							.Key("route_length"s).Value(static_cast<int>((*response.bus_stat).route_length))
 							.Key("stop_count"s).Value(static_cast<int>((*response.bus_stat).stops_on_route))
 							.Key("unique_stop_count"s).Value(static_cast<int>((*response.bus_stat).unique_stops))
+						.EndDict()
+					.Build().AsDict();
+			}
+			else {
+				return std::visit(ResponseConverter{}, JsonResponse{ NotFound{ response.request_id } });
+			}
+		}
+
+		json::Dict ResponseConverter::operator()(const RouteStat& response) const {
+			if (response.route_stat) {
+				json::Array items_array;
+				const auto& items = response.route_stat.value().items;
+				items_array.reserve(items.size());
+				for (const auto& item : items) {
+					items_array.push_back(std::visit(RouteItemConverter{}, item));
+				}
+				return
+					json::Builder{}
+						.StartDict()
+							.Key("request_id"s).Value(response.request_id)
+							.Key("total_time"s).Value(response.route_stat.value().total_time)
+							.Key("items"s).Value(items_array)
 						.EndDict()
 					.Build().AsDict();
 			}
@@ -150,6 +195,10 @@ namespace transport_catalogue {
 			if (all_requests.count("render_settings"s)) {
 				handler_.SetRenderSettings(GetRenderSettings(all_requests.at("render_settings"s).AsDict()));
 			}
+			if (all_requests.count("routing_settings"s)) {
+				handler_.SetRoutingSettings(GetRoutingSettings(all_requests.at("routing_settings"s).AsDict()));
+			}
+			handler_.BuildRouter();
 			json::Array response;
 			if (all_requests.count("stat_requests"s)) {
 				const json::Array& requests = all_requests.at("stat_requests"s).AsArray();
@@ -165,6 +214,9 @@ namespace transport_catalogue {
 					}
 					else if (type == "Map"s) {
 						response.push_back(GetMap(request_dict));
+					}
+					else if (type == "Route"s) {
+						response.push_back(GetRoute(request_dict));
 					}
 					else {
 						throw std::invalid_argument("Unknown stat_request type: "s + type);
@@ -184,6 +236,12 @@ namespace transport_catalogue {
 			const auto bus_stat = handler_.GetBusStat(bus_request.at("name"s).AsString());
 			const int request_id = bus_request.at("id"s).AsInt();
 			return std::visit(ResponseConverter{}, JsonResponse{ BusStat{request_id, bus_stat} });
+		}
+
+		json::Dict JsonReader::GetRoute(const json::Dict& route_request) const {
+			const auto route_stat = handler_.GetRoute(route_request.at("from"s).AsString(), route_request.at("to"s).AsString());
+			const int request_id = route_request.at("id"s).AsInt();
+			return std::visit(ResponseConverter{}, JsonResponse{ RouteStat{ request_id, route_stat } });
 		}
 
 		json::Dict JsonReader::GetMap(const json::Dict& map_request) const {
@@ -247,6 +305,13 @@ namespace transport_catalogue {
 			else {
 				throw std::invalid_argument("Failed to read color from json"s);
 			}
+		}
+
+		transport_router::RoutingSettings JsonReader::GetRoutingSettings(const json::Dict& settings_dict) const {
+			return {
+				static_cast<std::uint32_t>(settings_dict.at("bus_wait_time"s).AsInt()),
+				settings_dict.at("bus_velocity"s).AsDouble()
+			};
 		}
 
 	}
