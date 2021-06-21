@@ -28,8 +28,8 @@ namespace transport_catalogue {
 			return db_.GetBuses();
 		}
 
-		void RequestHandler::SetDistanceBetweenStops(const std::string_view from, const std::string_view to, const std::size_t distance) {
-			db_.SetDistanceBetweenStops(from, to, distance);
+		void RequestHandler::SetDistanceBetweenStops(const std::string_view from, const std::string_view to, const std::size_t distance_m) {
+			db_.SetDistanceBetweenStops(from, to, distance_m);
 		}
 
 		std::optional<domain::BusStat> RequestHandler::GetBusStat(const std::string_view& bus_name) const {
@@ -53,43 +53,6 @@ namespace transport_catalogue {
 		}
 
 		void RequestHandler::BuildRouter() {
-			const auto stops{ db_.GetStops() };
-			router_.InitGraph(stops.size() * 2);
-			for (const auto* stop : stops) {
-				const std::string name = stop->name;
-				router_.AddWaitEdge(stop->name);
-			}
-			const auto buses{ db_.GetBuses() };
-			for (const auto* bus : buses) {
-				for (std::size_t from_index = 0u; from_index + 1u < bus->stops.size(); ++from_index) {
-					std::size_t distance = 0u;
-					std::size_t distance_reverse = 0u;
-					for (std::size_t to_index = from_index + 1u; to_index < bus->stops.size(); ++to_index) {
-						distance += db_.GetDistanceBetweenStops(bus->stops[to_index - 1u], bus->stops[to_index]);
-						distance_reverse += db_.GetDistanceBetweenStops(bus->stops[bus->stops.size() - to_index], bus->stops[bus->stops.size() - to_index - 1u]);
-						router_.AddBusEdge(
-							transport_router::BusRoute{
-								bus->name,
-								bus->stops[from_index]->name,
-								bus->stops[to_index]->name,
-								distance,
-								to_index - from_index
-							}
-						);
-						if (bus->type == domain::BusType::DIRECT) {
-							router_.AddBusEdge(
-								transport_router::BusRoute{
-									bus->name,
-									bus->stops[bus->stops.size() - from_index - 1u]->name,
-									bus->stops[bus->stops.size() - to_index - 1u]->name,
-									distance_reverse,
-									to_index - from_index
-								}
-							);
-						}
-					}
-				}
-			}
 			router_.BuildRouter();
 		}
 

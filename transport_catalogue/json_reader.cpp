@@ -97,7 +97,7 @@ namespace transport_catalogue {
 						.StartDict()
 							.Key("curvature"s).Value((*response.bus_stat).curvature)
 							.Key("request_id"s).Value(response.request_id)
-							.Key("route_length"s).Value(static_cast<int>((*response.bus_stat).route_length))
+							.Key("route_length"s).Value(static_cast<int>((*response.bus_stat).route_length_m))
 							.Key("stop_count"s).Value(static_cast<int>((*response.bus_stat).stops_on_route))
 							.Key("unique_stop_count"s).Value(static_cast<int>((*response.bus_stat).unique_stops))
 						.EndDict()
@@ -120,7 +120,7 @@ namespace transport_catalogue {
 					json::Builder{}
 						.StartDict()
 							.Key("request_id"s).Value(response.request_id)
-							.Key("total_time"s).Value(response.route_stat.value().total_time)
+							.Key("total_time"s).Value(response.route_stat.value().total_time_min)
 							.Key("items"s).Value(items_array)
 						.EndDict()
 					.Build().AsDict();
@@ -165,8 +165,8 @@ namespace transport_catalogue {
 				const json::Dict& stop_dict = stop->AsDict();
 				const std::string_view from = stop_dict.at("name"s).AsString();
 				if (stop_dict.count("road_distances"s)) {
-					for (const auto& [to, distance] : stop_dict.at("road_distances"s).AsDict()) {
-						handler_.SetDistanceBetweenStops(from, to, static_cast<std::size_t>(distance.AsInt()));
+					for (const auto& [to, distance_m] : stop_dict.at("road_distances"s).AsDict()) {
+						handler_.SetDistanceBetweenStops(from, to, static_cast<std::size_t>(distance_m.AsInt()));
 					}
 				}
 			}

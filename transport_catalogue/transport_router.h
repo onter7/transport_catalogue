@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "domain.h"
+#include "transport_catalogue.h"
 #include "graph.h"
 #include "router.h"
 
@@ -16,15 +17,15 @@ namespace transport_catalogue {
 	namespace transport_router {
 
 		struct RoutingSettings {
-			std::uint32_t bus_wait_time = 6u;
-			double bus_velocity = 40.0;
+			std::uint32_t bus_wait_time_min = 6u;
+			double bus_velocity_kmh = 40.0;
 		};
 
 		struct BusRoute {
 			std::string_view bus_name;
 			std::string_view from;
 			std::string_view to;
-			std::size_t distance = 0u;
+			std::size_t distance_m = 0u;
 			std::size_t span_count = 0u;
 		};
 
@@ -58,12 +59,9 @@ namespace transport_catalogue {
 				std::size_t span_count = 0u;
 			};
 		public:
-			explicit TransportRouter() = default;
+			explicit TransportRouter(const TransportCatalogue& db);
 			void SetRoutingSettings(const RoutingSettings& settings);
 			void BuildRouter();
-			void InitGraph(const std::size_t vertex_count);
-			void AddWaitEdge(const std::string_view stop_name);
-			void AddBusEdge(const BusRoute& bus_route);
 			std::optional<domain::RouteStat> GetRoute(const std::string_view from, const std::string_view to) const;
 		private:
 			RoutingSettings settings_;
@@ -71,6 +69,10 @@ namespace transport_catalogue {
 			std::vector<EdgeInfo> edge_infos_;
 			std::optional<Graph> graph_;
 			std::optional<graph::Router<double>> router_;
+			const TransportCatalogue& db_;
+			void InitGraph(const std::size_t vertex_count);
+			void AddWaitEdge(const std::string_view stop_name);
+			void AddBusEdge(const BusRoute& bus_route);
 		};
 
 	}

@@ -8,84 +8,84 @@ namespace json {
 
 	// Context
 
-	Context::Context(Builder& builder)
+	Builder::Context::Context(Builder& builder)
 		: builder_(builder) {
 	}
 
 	// DictItemContext
 
-	DictItemContext::DictItemContext(Builder& builder)
+	Builder::DictItemContext::DictItemContext(Builder& builder)
 		: Context(builder) {
 	}
 
-	KeyContext DictItemContext::Key(const std::string& key) {
+	Builder::KeyContext Builder::DictItemContext::Key(const std::string& key) {
 		return builder_.Key(key);
 	}
 
-	Builder& DictItemContext::EndDict() {
+	Builder& Builder::DictItemContext::EndDict() {
 		return builder_.EndDict();
 	}
 
 	// ArrayItemContext
 
-	ArrayItemContext::ArrayItemContext(Builder& builder)
+	Builder::ArrayItemContext::ArrayItemContext(Builder& builder)
 		: Context(builder) {
 	}
 
-	ArrayValueContext ArrayItemContext::Value(json::Node value) {
+	Builder::ArrayValueContext Builder::ArrayItemContext::Value(json::Node value) {
 		return ArrayValueContext(builder_.Value(value));
 	}
 
-	DictItemContext ArrayItemContext::StartDict() {
+	Builder::DictItemContext Builder::ArrayItemContext::StartDict() {
 		return builder_.StartDict();
 	}
 
-	ArrayItemContext ArrayItemContext::StartArray() {
+	Builder::ArrayItemContext Builder::ArrayItemContext::StartArray() {
 		return builder_.StartArray();
 	}
 
-	Builder& ArrayItemContext::EndArray() {
+	Builder& Builder::ArrayItemContext::EndArray() {
 		return builder_.EndArray();
 	}
 
 	// KeyContext
 
-	KeyContext::KeyContext(Builder& builder)
+	Builder::KeyContext::KeyContext(Builder& builder)
 		: Context(builder) {
 	}
 
-	DictItemContext KeyContext::Value(json::Node value) {
+	Builder::DictItemContext Builder::KeyContext::Value(json::Node value) {
 		return DictItemContext(builder_.Value(value));
 	}
 
-	DictItemContext KeyContext::StartDict() {
+	Builder::DictItemContext Builder::KeyContext::StartDict() {
 		return builder_.StartDict();
 	}
 
-	ArrayItemContext KeyContext::StartArray() {
+	Builder::ArrayItemContext Builder::KeyContext::StartArray() {
 		return builder_.StartArray();
 	}
 
 	// ValueContext
 
-	ArrayValueContext::ArrayValueContext(Builder& builder)
+	Builder::ArrayValueContext::ArrayValueContext(Builder& builder)
 		: Context(builder) {
 	}
 
-	ArrayValueContext ArrayValueContext::Value(json::Node value) {
+	Builder::ArrayValueContext Builder::ArrayValueContext::Value(json::Node value) {
 		builder_.Value(value);
 		return *this;
 	}
 
-	DictItemContext ArrayValueContext::StartDict() {
+	Builder::DictItemContext Builder::ArrayValueContext::StartDict() {
 		return builder_.StartDict();
 	}
 
-	ArrayItemContext ArrayValueContext::StartArray() {
+	Builder::ArrayItemContext Builder::ArrayValueContext::StartArray() {
 		return builder_.StartArray();
 	}
 
-	Builder& ArrayValueContext::EndArray() {
+	Builder& Builder::ArrayValueContext::EndArray() {
 		return builder_.EndArray();
 	}
 
@@ -125,11 +125,11 @@ namespace json {
 		return AddNode(value, NodeType::VALUE);
 	}
 
-	DictItemContext Builder::StartDict() {
+	Builder::DictItemContext Builder::StartDict() {
 		return DictItemContext(AddNode(json::Dict{}, NodeType::START));
 	}
 
-	ArrayItemContext Builder::StartArray() {
+	Builder::ArrayItemContext Builder::StartArray() {
 		return ArrayItemContext(AddNode(json::Array{}, NodeType::START));
 	}
 
@@ -141,7 +141,7 @@ namespace json {
 		return EndNode<json::Array>();
 	}
 
-	KeyContext Builder::Key(const std::string& key) {
+	Builder::KeyContext Builder::Key(const std::string& key) {
 		CheckReady();
 		if (!nodes_stack_.back()->IsDict()) {
 			throw std::logic_error("Key is allowed to be created only in the context of a dictionary"s);

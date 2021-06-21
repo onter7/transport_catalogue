@@ -23,7 +23,7 @@ namespace transport_catalogue {
 			void AddBus(const domain::BusType type, const std::string_view bus_name, const std::vector<std::string_view>& stop_names);
 			std::vector<std::pair<const domain::Stop*, std::size_t>> GetStopsToBuses() const;
 			std::vector<const domain::Bus*> GetBuses() const;
-			void SetDistanceBetweenStops(const std::string_view from, const std::string_view to, const std::size_t distance);
+			void SetDistanceBetweenStops(const std::string_view from, const std::string_view to, const std::size_t distance_m);
 			std::optional<domain::BusStat> GetBusStat(const std::string_view& bus_name) const;
 			const std::unordered_set<const domain::Bus*>* GetBusesByStop(const std::string_view& stop_name) const;
 			void SetRenderSettings(const renderer::RenderSettings& settings);

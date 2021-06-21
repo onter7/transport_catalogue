@@ -9,53 +9,52 @@
 
 namespace json {
 
-	class Builder;
-	class Context;
-	class ArrayItemContext;
-	class DictItemContext;
-	class KeyContext;
-	class ArrayValueContext;
-
-	class Context {
-	protected:
-		Context(Builder& builder);
-		Builder& builder_;
-	};
-
-	class DictItemContext : private Context {
-	public:
-		DictItemContext(Builder& builder);
-		KeyContext Key(const std::string& key);
-		Builder& EndDict();
-	};
-
-	class ArrayItemContext : private Context {
-	public:
-		ArrayItemContext(Builder& builder);
-		ArrayValueContext Value(json::Node value);
-		DictItemContext StartDict();
-		ArrayItemContext StartArray();
-		Builder& EndArray();
-	};
-
-	class KeyContext : private Context {
-	public:
-		KeyContext(Builder& builder);
-		DictItemContext Value(json::Node value);
-		DictItemContext StartDict();
-		ArrayItemContext StartArray();
-	};
-
-	class ArrayValueContext : private Context {
-	public:
-		ArrayValueContext(Builder& builder);
-		ArrayValueContext Value(json::Node value);
-		DictItemContext StartDict();
-		ArrayItemContext StartArray();
-		Builder& EndArray();
-	};
-
 	class Builder {
+	private:
+		class Context;
+		class ArrayItemContext;
+		class DictItemContext;
+		class KeyContext;
+		class ArrayValueContext;
+
+		class Context {
+		protected:
+			Context(Builder& builder);
+			Builder& builder_;
+		};
+
+		class DictItemContext : private Context {
+		public:
+			DictItemContext(Builder& builder);
+			KeyContext Key(const std::string& key);
+			Builder& EndDict();
+		};
+
+		class ArrayItemContext : private Context {
+		public:
+			ArrayItemContext(Builder& builder);
+			ArrayValueContext Value(json::Node value);
+			DictItemContext StartDict();
+			ArrayItemContext StartArray();
+			Builder& EndArray();
+		};
+
+		class KeyContext : private Context {
+		public:
+			KeyContext(Builder& builder);
+			DictItemContext Value(json::Node value);
+			DictItemContext StartDict();
+			ArrayItemContext StartArray();
+		};
+
+		class ArrayValueContext : private Context {
+		public:
+			ArrayValueContext(Builder& builder);
+			ArrayValueContext Value(json::Node value);
+			DictItemContext StartDict();
+			ArrayItemContext StartArray();
+			Builder& EndArray();
+		};
 	public:
 		enum class NodeType {
 			START,

@@ -82,10 +82,10 @@ namespace transport_catalogue {
 		return &stop_to_buses_.at(stop_name_to_stop_.at(stop_name));
 	}
 
-	void TransportCatalogue::SetDistanceBetweenStops(const std::string_view from, const std::string_view to, const std::size_t distance) {
+	void TransportCatalogue::SetDistanceBetweenStops(const std::string_view from, const std::string_view to, const std::size_t distance_m) {
 		const domain::Stop* from_stop = GetStop(from);
 		const domain::Stop* to_stop = GetStop(to);
-		stop_pair_to_distance_[std::make_pair(from_stop, to_stop)] = distance;
+		stop_pair_to_distance_[std::make_pair(from_stop, to_stop)] = distance_m;
 	}
 
 	std::size_t TransportCatalogue::GetDistanceBetweenStops(const domain::Stop* from, const domain::Stop* to) const {

@@ -8,12 +8,53 @@ namespace transport_catalogue {
 
 	namespace transport_router {
 
+		TransportRouter::TransportRouter(const TransportCatalogue& db)
+			: db_(db) {
+		}
+
 		void TransportRouter::SetRoutingSettings(const RoutingSettings& settings) {
 			settings_ = settings;
 		}
 
 		void TransportRouter::BuildRouter() {
-			router_.emplace(graph::Router<double>{ graph_.value()});
+			const auto stops{ db_.GetStops() };
+			InitGraph(stops.size() * 2);
+			for (const auto* stop : stops) {
+				const std::string name = stop->name;
+				AddWaitEdge(stop->name);
+			}
+			const auto buses{ db_.GetBuses() };
+			for (const auto* bus : buses) {
+				for (std::size_t from_index = 0u; from_index + 1u < bus->stops.size(); ++from_index) {
+					std::size_t distance_m = 0u;
+					std::size_t distance_reverse = 0u;
+					for (std::size_t to_index = from_index + 1u; to_index < bus->stops.size(); ++to_index) {
+						distance_m += db_.GetDistanceBetweenStops(bus->stops[to_index - 1u], bus->stops[to_index]);
+						distance_reverse += db_.GetDistanceBetweenStops(bus->stops[bus->stops.size() - to_index], bus->stops[bus->stops.size() - to_index - 1u]);
+						AddBusEdge(
+							transport_router::BusRoute{
+								bus->name,
+								bus->stops[from_index]->name,
+								bus->stops[to_index]->name,
+								distance_m,
+								to_index - from_index
+							}
+						);
+						if (bus->type == domain::BusType::DIRECT) {
+							AddBusEdge(
+								transport_router::BusRoute{
+									bus->name,
+									bus->stops[bus->stops.size() - from_index - 1u]->name,
+									bus->stops[bus->stops.size() - to_index - 1u]->name,
+									distance_reverse,
+									to_index - from_index
+								}
+							);
+						}
+					}
+				}
+			}
+			router_.emplace(graph::Router<double>{ graph_.value() });
 		}
 
 		void TransportRouter::InitGraph(const std::size_t vertex_count) {
@@ -29,7 +70,7 @@ namespace transport_catalogue {
 				edge_infos_.push_back(
 					EdgeInfo{
 						Type::Wait,
-						graph::Edge<double>{vertex_count, vertex_count + 1, static_cast<double>(settings_.bus_wait_time)},
+						graph::Edge<double>{vertex_count, vertex_count + 1, static_cast<double>(settings_.bus_wait_time_min)},
 						stop_name, stop_name,
 						std::nullopt,
 						0u
@@ -43,7 +84,7 @@ namespace transport_catalogue {
 		void TransportRouter::AddBusEdge(const BusRoute& bus_route) {
 			const graph::VertexId from_id = stop_name_to_vertex_info_[bus_route.from].stop_waiting_id;
 			const graph::VertexId to_id = stop_name_to_vertex_info_[bus_route.to].start_waiting_id;
-			const double weight = bus_route.distance / settings_.bus_velocity * TO_MINUTES;
+			const double weight = bus_route.distance_m / settings_.bus_velocity_kmh * TO_MINUTES;
 			edge_infos_.push_back(
 				EdgeInfo{
 					Type::Bus,
@@ -74,7 +115,7 @@ namespace transport_catalogue {
 				else {
 					result.items.push_back(domain::BusRouteItem{ edge_info.edge.weight, edge_info.bus_name.value(), edge_info.span_count });
 				}
-				result.total_time += edge_info.edge.weight;
+				result.total_time_min += edge_info.edge.weight;
 			}
 			return result;
 		}

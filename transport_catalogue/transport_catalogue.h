@@ -36,7 +36,7 @@ namespace transport_catalogue {
 		std::vector<const domain::Bus*> GetBuses() const;
 		std::optional<domain::BusStat> GetBusStat(const std::string_view bus_name) const;
 		const std::unordered_set<const domain::Bus*>* GetBusesByStop(const std::string_view stop_name) const;
-		void SetDistanceBetweenStops(const std::string_view from, const std::string_view to, const std::size_t distance);
+		void SetDistanceBetweenStops(const std::string_view from, const std::string_view to, const std::size_t distance_m);
 		std::size_t GetDistanceBetweenStops(const domain::Stop* from, const domain::Stop* to) const;
 	private:
 		std::deque<domain::Stop> stops_;
