@@ -29,6 +29,7 @@ namespace transport_catalogue {
 			std::optional<domain::BusStat> GetBusStat(const std::string_view& bus_name) const;
 			const std::unordered_set<const domain::Bus*>* GetBusesByStop(const std::string_view& stop_name) const;
 			void SetRenderSettings(const renderer::RenderSettings& settings);
+			const renderer::RenderSettings& GetRenderSettings() const;
 			svg::Document RenderMap(std::vector<std::pair<const domain::Stop*, std::size_t>>& stops, std::vector<const domain::Bus*>& buses) const;
 			void SetRoutingSettings(const transport_router::RoutingSettings& settings);
 			void BuildRouter();

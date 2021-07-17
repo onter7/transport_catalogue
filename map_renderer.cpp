@@ -21,6 +21,10 @@ namespace transport_catalogue {
 			settings_ = settings;
 		}
 
+		const RenderSettings& MapRenderer::GetRenderSettings() const {
+			return settings_;
+		}
+
 		svg::Document MapRenderer::RenderMap(std::vector<std::pair<const domain::Stop*, std::size_t>>& stops_to_bus_counts, std::vector<const domain::Bus*>& buses) const {
 			std::sort(stops_to_bus_counts.begin(), stops_to_bus_counts.end(),
 				[](const auto& lhs, const auto& rhs) {

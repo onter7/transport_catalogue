@@ -24,23 +24,23 @@ namespace transport_catalogue {
 		json::Dict RouteItemConverter::operator()(const domain::BusRouteItem& bus) const {
 			return
 				json::Builder{}
-					.StartDict()
-						.Key("type"s).Value("Bus"s)
-						.Key("bus"s).Value(std::string(bus.bus_name))
-						.Key("span_count"s).Value(static_cast<int>(bus.span_count))
-						.Key("time"s).Value(bus.time)
-					.EndDict()
+				.StartDict()
+				.Key("type"s).Value("Bus"s)
+				.Key("bus"s).Value(std::string(bus.bus_name))
+				.Key("span_count"s).Value(static_cast<int>(bus.span_count))
+				.Key("time"s).Value(bus.time)
+				.EndDict()
 				.Build().AsDict();
 		}
 
 		json::Dict RouteItemConverter::operator()(const domain::WaitRouteItem& wait) const {
 			return
 				json::Builder{}
-					.StartDict()
-						.Key("type"s).Value("Wait"s)
-						.Key("stop_name"s).Value(std::string(wait.stop_name))
-						.Key("time"s).Value(wait.time)
-					.EndDict()
+				.StartDict()
+				.Key("type"s).Value("Wait"s)
+				.Key("stop_name"s).Value(std::string(wait.stop_name))
+				.Key("time"s).Value(wait.time)
+				.EndDict()
 				.Build().AsDict();
 		}
 
@@ -49,10 +49,10 @@ namespace transport_catalogue {
 		json::Dict ResponseConverter::operator()(const NotFound& response) const {
 			return
 				json::Builder{}
-					.StartDict()
-						.Key("request_id"s).Value(response.request_id)
-						.Key("error_message"s).Value("not found"s)
-					.EndDict()
+				.StartDict()
+				.Key("request_id"s).Value(response.request_id)
+				.Key("error_message"s).Value("not found"s)
+				.EndDict()
 				.Build().AsDict();
 		}
 
@@ -61,10 +61,10 @@ namespace transport_catalogue {
 			response.doc.Render(ss);
 			return
 				json::Builder{}
-					.StartDict()
-						.Key("map"s).Value(std::move(ss.str()))
-						.Key("request_id"s).Value(response.request_id)
-					.EndDict()
+				.StartDict()
+				.Key("map"s).Value(std::move(ss.str()))
+				.Key("request_id"s).Value(response.request_id)
+				.EndDict()
 				.Build().AsDict();
 		}
 
@@ -82,10 +82,10 @@ namespace transport_catalogue {
 				);
 				return
 					json::Builder{}
-						.StartDict()
-							.Key("buses"s).Value(bus_names)
-							.Key("request_id"s).Value(response.request_id)
-						.EndDict()
+					.StartDict()
+					.Key("buses"s).Value(bus_names)
+					.Key("request_id"s).Value(response.request_id)
+					.EndDict()
 					.Build().AsDict();
 			}
 			else {
@@ -97,13 +97,13 @@ namespace transport_catalogue {
 			if (response.bus_stat) {
 				return
 					json::Builder{}
-						.StartDict()
-							.Key("curvature"s).Value((*response.bus_stat).curvature)
-							.Key("request_id"s).Value(response.request_id)
-							.Key("route_length"s).Value(static_cast<int>((*response.bus_stat).route_length_m))
-							.Key("stop_count"s).Value(static_cast<int>((*response.bus_stat).stops_on_route))
-							.Key("unique_stop_count"s).Value(static_cast<int>((*response.bus_stat).unique_stops))
-						.EndDict()
+					.StartDict()
+					.Key("curvature"s).Value((*response.bus_stat).curvature)
+					.Key("request_id"s).Value(response.request_id)
+					.Key("route_length"s).Value(static_cast<int>((*response.bus_stat).route_length_m))
+					.Key("stop_count"s).Value(static_cast<int>((*response.bus_stat).stops_on_route))
+					.Key("unique_stop_count"s).Value(static_cast<int>((*response.bus_stat).unique_stops))
+					.EndDict()
 					.Build().AsDict();
 			}
 			else {
@@ -121,11 +121,11 @@ namespace transport_catalogue {
 				}
 				return
 					json::Builder{}
-						.StartDict()
-							.Key("request_id"s).Value(response.request_id)
-							.Key("total_time"s).Value(response.route_stat.value().total_time_min)
-							.Key("items"s).Value(items_array)
-						.EndDict()
+					.StartDict()
+					.Key("request_id"s).Value(response.request_id)
+					.Key("total_time"s).Value(response.route_stat.value().total_time_min)
+					.Key("items"s).Value(items_array)
+					.EndDict()
 					.Build().AsDict();
 			}
 			else {
@@ -208,7 +208,7 @@ namespace transport_catalogue {
 		}
 
 		void JsonReader::ProcessRequests(std::istream& input, std::ostream& output) {
-			const json::Document doc{ json::Load(input) };			
+			const json::Document doc{ json::Load(input) };
 			const json::Dict& all_requests = doc.GetRoot().AsDict();
 			if (all_requests.count("serialization_settings"s)) {
 				const std::string file_name = all_requests.at("serialization_settings"s).AsDict().at("file"s).AsString();
@@ -331,11 +331,13 @@ namespace transport_catalogue {
 		}
 
 		void JsonReader::SerializeTransportCatalogue(const std::string& file_name) const {
-			serialization::SerializeTransportCatalogue(file_name, handler_);
+			serialization::Serializer serializer(file_name, handler_);
+			serializer.SerializeTransportCatalogue();
 		}
 
 		void JsonReader::DeserializeTransportCatalogue(const std::string& file_name) const {
-			serialization::DeserializeTransportCatalogue(file_name, handler_);
+			serialization::Serializer serializer(file_name, handler_);
+			serializer.DeserializeTransportCatalogue();
 		}
 
 	}

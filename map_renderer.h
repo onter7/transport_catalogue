@@ -92,6 +92,7 @@ namespace transport_catalogue {
 			explicit MapRenderer() = default;
 			svg::Document RenderMap(std::vector<std::pair<const domain::Stop*, std::size_t>>& stops_to_bus_counts, std::vector<const domain::Bus*>& buses) const;
 			void SetRenderSettings(const RenderSettings& settings);
+			const RenderSettings& GetRenderSettings() const;
 		private:
 			RenderSettings settings_;
 

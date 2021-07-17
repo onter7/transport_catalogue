@@ -52,6 +52,10 @@ namespace transport_catalogue {
 			renderer_.SetRenderSettings(settings);
 		}
 
+		const renderer::RenderSettings& RequestHandler::GetRenderSettings() const {
+			return renderer_.GetRenderSettings();
+		}
+
 		svg::Document RequestHandler::RenderMap(std::vector<std::pair<const domain::Stop*, std::size_t>>& stops_to_bus_counts, std::vector<const domain::Bus*>& buses) const {
 			return renderer_.RenderMap(stops_to_bus_counts, buses);
 		}
