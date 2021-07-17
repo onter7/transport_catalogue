@@ -5,11 +5,13 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 #include "json.h"
 #include "request_handler.h"
 #include "transport_router.h"
+#include <transport_catalogue.pb.h>
 
 namespace transport_catalogue {
 
@@ -63,6 +65,7 @@ namespace transport_catalogue {
 		public:
 			explicit JsonReader(request_handler::RequestHandler& handler);
 			void ProcessRequests(std::istream& input = std::cin, std::ostream& output = std::cout);
+			void MakeBase(std::istream& input = std::cin);
 		private:
 			request_handler::RequestHandler& handler_;
 
@@ -76,6 +79,8 @@ namespace transport_catalogue {
 			json::Dict GetRoute(const json::Dict& route_request) const;
 			static svg::Color GetColor(const json::Node& color_node);
 			transport_router::RoutingSettings GetRoutingSettings(const json::Dict& settings_dict) const;
+			void SerializeTransportCatalogue(const std::string& file_name) const;
+			void DeserializeTransportCatalogue(const std::string& file_name) const;
 		};
 
 	}

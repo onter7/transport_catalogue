@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package transport_catalogue_serialize;
+
+message Coordinates {
+	double lat = 1;
+	double lng = 2;
+}
+
+message Stop {
+	uint32 id = 1;
+	string name = 2;
+	Coordinates coordinates = 3;
+}
+
+message Bus {
+	enum BusType {
+		CIRCULAR = 0;
+		DIRECT = 1;
+	}
+	BusType type = 1;
+	string name = 2;
+	repeated uint32 stop_ids = 3;
+}
+
+message Distance {
+	uint32 from_stop_id = 1;
+	uint32 to_stop_id = 2;
+	uint32 distance_m = 3;
+}
+
+message TransportCatalogue {
+	repeated Stop stops = 1;
+	repeated Bus buses = 2;
+	repeated Distance distances = 3;
+}

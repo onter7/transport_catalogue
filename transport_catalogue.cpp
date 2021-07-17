@@ -58,6 +58,10 @@ namespace transport_catalogue {
 		return result;
 	}
 
+	const TransportCatalogue::StopPairsToDistances& TransportCatalogue::GetStopPairsToDistances() const {
+		return stop_pair_to_distance_;
+	}
+
 	std::optional<domain::BusStat> TransportCatalogue::GetBusStat(const std::string_view bus_name) const {
 		if (!bus_name_to_bus_.count(bus_name)) {
 			return std::nullopt;

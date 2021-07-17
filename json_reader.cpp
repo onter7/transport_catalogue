@@ -1,6 +1,8 @@
 ﻿#include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <fstream>
+#include <ios>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -11,6 +13,7 @@
 
 #include "json_reader.h"
 #include "json_builder.h"
+#include "serialization.h"
 
 using namespace std::literals;
 
@@ -188,7 +191,7 @@ namespace transport_catalogue {
 			}
 		}
 
-		void JsonReader::ProcessRequests(std::istream& input, std::ostream& output) {
+		void JsonReader::MakeBase(std::istream& input) {
 			const json::Document doc{ json::Load(input) };
 			UpdateDatabase(doc);
 			const json::Dict& all_requests = doc.GetRoot().AsDict();
@@ -197,6 +200,19 @@ namespace transport_catalogue {
 			}
 			if (all_requests.count("routing_settings"s)) {
 				handler_.SetRoutingSettings(GetRoutingSettings(all_requests.at("routing_settings"s).AsDict()));
+			}
+			if (all_requests.count("serialization_settings"s)) {
+				const std::string file_name = all_requests.at("serialization_settings"s).AsDict().at("file"s).AsString();
+				SerializeTransportCatalogue(file_name);
+			}
+		}
+
+		void JsonReader::ProcessRequests(std::istream& input, std::ostream& output) {
+			const json::Document doc{ json::Load(input) };			
+			const json::Dict& all_requests = doc.GetRoot().AsDict();
+			if (all_requests.count("serialization_settings"s)) {
+				const std::string file_name = all_requests.at("serialization_settings"s).AsDict().at("file"s).AsString();
+				DeserializeTransportCatalogue(file_name);
 			}
 			handler_.BuildRouter();
 			json::Array response;
@@ -312,6 +328,14 @@ namespace transport_catalogue {
 				static_cast<std::uint32_t>(settings_dict.at("bus_wait_time"s).AsInt()),
 				settings_dict.at("bus_velocity"s).AsDouble()
 			};
+		}
+
+		void JsonReader::SerializeTransportCatalogue(const std::string& file_name) const {
+			serialization::SerializeTransportCatalogue(file_name, handler_);
+		}
+
+		void JsonReader::DeserializeTransportCatalogue(const std::string& file_name) const {
+			serialization::DeserializeTransportCatalogue(file_name, handler_);
 		}
 
 	}

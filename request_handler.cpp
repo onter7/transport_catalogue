@@ -28,6 +28,14 @@ namespace transport_catalogue {
 			return db_.GetBuses();
 		}
 
+		std::vector<const domain::Stop*> RequestHandler::GetStops() const {
+			return db_.GetStops();
+		}
+
+		const TransportCatalogue::StopPairsToDistances& RequestHandler::GetStopPairsToDistances() const {
+			return db_.GetStopPairsToDistances();
+		}
+
 		void RequestHandler::SetDistanceBetweenStops(const std::string_view from, const std::string_view to, const std::size_t distance_m) {
 			db_.SetDistanceBetweenStops(from, to, distance_m);
 		}
