@@ -163,9 +163,9 @@ namespace serialization {
 		}
 		else if (proto_color.has_rgba()) {
 			color = svg::Rgba{
-				static_cast<uint8_t>(proto_color.rgb().red()),
-				static_cast<uint8_t>(proto_color.rgb().green()),
-				static_cast<uint8_t>(proto_color.rgb().blue()),
+				static_cast<uint8_t>(proto_color.rgba().rgb().red()),
+				static_cast<uint8_t>(proto_color.rgba().rgb().green()),
+				static_cast<uint8_t>(proto_color.rgba().rgb().blue()),
 				proto_color.rgba().opacity()
 			};
 		}
