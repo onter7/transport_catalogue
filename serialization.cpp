@@ -144,11 +144,8 @@ namespace serialization {
 		svg::Color underlayer_color;
 		SetColor(underlayer_color, proto_settings.underlayer_color());
 		settings.underlayer_color = underlayer_color;
-		const std::size_t color_palette_size = proto_settings.color_palette().size();
-		if (!proto_settings.color_palette().empty()) {
-			settings.color_palette.reserve(proto_settings.color_palette().size());
-			settings.color_palette.clear();
-		}
+		settings.color_palette.reserve(proto_settings.color_palette().size());
+		settings.color_palette.clear();
 		for (const auto& proto_color : proto_settings.color_palette()) {
 			svg::Color color;
 			SetColor(color, proto_color);
