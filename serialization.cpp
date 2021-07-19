@@ -51,22 +51,23 @@ namespace serialization {
 		tc.mutable_stops()->Reserve(stops.size());
 		std::unordered_map<const transport_catalogue::domain::Stop*, std::size_t> stop_to_id;
 		for (std::size_t i = 0; i < stops.size(); ++i) {
+			transport_catalogue_serialize::Stop* new_proto_stop = tc.add_stops();
 			stop_to_id[stops[i]] = i;
-			tc.mutable_stops()->Add(GetProtoStop(stops[i], i));
+			SetProtoStop(*new_proto_stop, *stops[i], i);
 		}
 		const std::vector<const transport_catalogue::domain::Bus*> buses = handler_.GetBuses();
 		tc.mutable_buses()->Reserve(buses.size());
 		for (const auto bus : buses) {
-			tc.mutable_buses()->Add(GetProtoBus(bus, stop_to_id));
+			transport_catalogue_serialize::Bus* new_proto_bus = tc.add_buses();
+			SetProtoBus(*new_proto_bus, *bus, stop_to_id);
 		}
 		const transport_catalogue::TransportCatalogue::StopPairsToDistances& stop_pairs_to_distances = handler_.GetStopPairsToDistances();
 		tc.mutable_distances()->Reserve(stop_pairs_to_distances.size());
 		for (const auto& [stop_pair, distance] : stop_pairs_to_distances) {
-			transport_catalogue_serialize::Distance proto_distance;
-			proto_distance.set_from_stop_id(stop_to_id[stop_pair.first]);
-			proto_distance.set_to_stop_id(stop_to_id[stop_pair.second]);
-			proto_distance.set_distance_m(distance);
-			tc.mutable_distances()->Add(std::move(proto_distance));
+			transport_catalogue_serialize::Distance* new_proto_distance = tc.add_distances();
+			new_proto_distance->set_from_stop_id(stop_to_id[stop_pair.first]);
+			new_proto_distance->set_to_stop_id(stop_to_id[stop_pair.second]);
+			new_proto_distance->set_distance_m(distance);
 		}
 		*tc.mutable_settings() = GetProtoRenderSettings();
 		tc.SerializeToOstream(&out);
@@ -121,9 +122,8 @@ namespace serialization {
 		proto_settings.set_underlayer_width(settings.underlayer_width);
 		proto_settings.mutable_color_palette()->Reserve(settings.color_palette.size());
 		for (const auto& color : settings.color_palette) {
-			transport_catalogue_serialize::Color proto_color;
-			std::visit(ColorSetter{ proto_color }, color);
-			proto_settings.mutable_color_palette()->Add(std::move(proto_color));
+			transport_catalogue_serialize::Color* new_proto_color = proto_settings.add_color_palette();
+			std::visit(ColorSetter{ *new_proto_color }, color);
 		}
 		return proto_settings;
 	}
@@ -174,30 +174,26 @@ namespace serialization {
 			color = proto_color.color_str();
 		}
 		else {
-			throw std::runtime_error("Unkown color format");
+			color = std::monostate{};
 		}
 	}
 
-	transport_catalogue_serialize::Stop Serializer::GetProtoStop(const transport_catalogue::domain::Stop* stop, const std::size_t id) {
+	void Serializer::SetProtoStop(transport_catalogue_serialize::Stop& proto_stop, const transport_catalogue::domain::Stop& stop, const std::size_t id) {
 		transport_catalogue_serialize::Coordinates coordintates;
-		coordintates.set_lat(stop->coordinates.lat);
-		coordintates.set_lng(stop->coordinates.lng);
-		transport_catalogue_serialize::Stop proto_stop;
+		coordintates.set_lat(stop.coordinates.lat);
+		coordintates.set_lng(stop.coordinates.lng);
 		*proto_stop.mutable_coordinates() = std::move(coordintates);
 		proto_stop.set_id(id);
-		proto_stop.set_name(stop->name);
-		return proto_stop;
+		proto_stop.set_name(stop.name);
 	}
 
-	transport_catalogue_serialize::Bus Serializer::GetProtoBus(const transport_catalogue::domain::Bus* bus, const std::unordered_map<const transport_catalogue::domain::Stop*, std::size_t>& stop_to_id) {
-		transport_catalogue_serialize::Bus proto_bus;
-		proto_bus.set_type(static_cast<transport_catalogue_serialize::Bus_BusType>(bus->type));
-		proto_bus.set_name(bus->name);
-		proto_bus.mutable_stop_ids()->Reserve(bus->stops.size());
-		for (const auto stop : bus->stops) {
+	void Serializer::SetProtoBus(transport_catalogue_serialize::Bus& proto_bus, const transport_catalogue::domain::Bus& bus, const std::unordered_map<const transport_catalogue::domain::Stop*, std::size_t>& stop_to_id) {
+		proto_bus.set_type(static_cast<transport_catalogue_serialize::Bus_BusType>(bus.type));
+		proto_bus.set_name(bus.name);
+		proto_bus.mutable_stop_ids()->Reserve(bus.stops.size());
+		for (const auto stop : bus.stops) {
 			proto_bus.add_stop_ids(stop_to_id.at(stop));
 		}
-		return proto_bus;
 	}
 
 }
