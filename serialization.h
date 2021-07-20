@@ -32,9 +32,7 @@ namespace serialization {
 		static void SetProtoBus(transport_catalogue_serialize::Bus& proto_bus, const transport_catalogue::domain::Bus& bus, const std::unordered_map<const transport_catalogue::domain::Stop*, std::size_t>& stop_to_id);
 		static void SetColor(svg::Color& color, const transport_catalogue_serialize::Color& proto_color);
 		
-		transport_catalogue_serialize::RenderSettings GetProtoRenderSettings() const;
-				
-		
+		transport_catalogue_serialize::RenderSettings GetProtoRenderSettings() const;		
 		transport_catalogue::renderer::RenderSettings GetRenderSettings(const transport_catalogue_serialize::RenderSettings& proto_settings) const;
 	};
 
