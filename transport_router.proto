@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package transport_catalogue_serialize;
+
+import "graph.proto";
+
+message RoutingSettings {
+	uint32 bus_wait_time_min = 1;
+	double bus_velocity_kmh = 2;
+}
+
+message TransportRouter {
+	RoutingSettings settings = 1;
+	repeated BusRoute bus_routes = 2;
+}

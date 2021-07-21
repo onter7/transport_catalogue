@@ -32,6 +32,14 @@ namespace transport_catalogue {
 			return db_.GetStops();
 		}
 
+		const domain::Stop* RequestHandler::GetStop(const std::string_view stop_name) const {
+			return db_.GetStop(stop_name);
+		}
+
+		const domain::Bus* RequestHandler::GetBus(const std::string_view bus_name) const {
+			return db_.GetBus(bus_name);
+		}
+
 		const TransportCatalogue::StopPairsToDistances& RequestHandler::GetStopPairsToDistances() const {
 			return db_.GetStopPairsToDistances();
 		}
@@ -68,8 +76,20 @@ namespace transport_catalogue {
 			router_.BuildRouter();
 		}
 
+		void RequestHandler::BuildRouter(const std::vector<transport_catalogue::transport_router::BusRoute>& bus_routes, const std::vector<const domain::Stop*>& stops, const std::size_t vertex_count) {
+			router_.BuildRouter(bus_routes, stops, vertex_count);
+		}
+
 		std::optional<domain::RouteStat> RequestHandler::GetRoute(const std::string_view from, const std::string_view to) const {
 			return router_.GetRoute(from, to);
+		}
+
+		const transport_router::RoutingSettings& RequestHandler::GetRoutingSettings() const {
+			return router_.GetRoutingSettings();
+		}
+
+		const std::vector<transport_router::TransportRouter::EdgeInfo>& RequestHandler::GetEdgeInfos() const {
+			return router_.GetEdgeInfos();
 		}
 
 	}

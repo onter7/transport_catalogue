@@ -201,6 +201,7 @@ namespace transport_catalogue {
 			if (all_requests.count("routing_settings"s)) {
 				handler_.SetRoutingSettings(GetRoutingSettings(all_requests.at("routing_settings"s).AsDict()));
 			}
+			handler_.BuildRouter();
 			if (all_requests.count("serialization_settings"s)) {
 				const std::string file_name = all_requests.at("serialization_settings"s).AsDict().at("file"s).AsString();
 				SerializeTransportCatalogue(file_name);
@@ -214,7 +215,6 @@ namespace transport_catalogue {
 				const std::string file_name = all_requests.at("serialization_settings"s).AsDict().at("file"s).AsString();
 				DeserializeTransportCatalogue(file_name);
 			}
-			handler_.BuildRouter();
 			json::Array response;
 			if (all_requests.count("stat_requests"s)) {
 				const json::Array& requests = all_requests.at("stat_requests"s).AsArray();

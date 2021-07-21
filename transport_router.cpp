@@ -57,6 +57,21 @@ namespace transport_catalogue {
 			router_.emplace(graph::Router<double>{ graph_.value() });
 		}
 
+		void TransportRouter::BuildRouter(
+			const std::vector<BusRoute>& bus_routes,
+			const std::vector<const domain::Stop*>& stops,
+			const std::size_t vertex_count
+		) {
+			InitGraph(vertex_count);
+			for (const auto stop : stops) {
+				AddWaitEdge(stop->name);
+			}
+			for (const auto& bus_route : bus_routes) {
+				AddBusEdge(bus_route);
+			}
+			router_.emplace(graph::Router<double>{ graph_.value() });
+		}
+
 		void TransportRouter::InitGraph(const std::size_t vertex_count) {
 			if (!graph_) {
 				graph_ = std::move(Graph(vertex_count));
@@ -84,7 +99,13 @@ namespace transport_catalogue {
 		void TransportRouter::AddBusEdge(const BusRoute& bus_route) {
 			const graph::VertexId from_id = stop_name_to_vertex_info_[bus_route.from].stop_waiting_id;
 			const graph::VertexId to_id = stop_name_to_vertex_info_[bus_route.to].start_waiting_id;
-			const double weight = bus_route.distance_m / settings_.bus_velocity_kmh * TO_MINUTES;
+			double weight;
+			if (bus_route.weight.has_value()) {
+				weight = bus_route.weight.value();
+			}
+			else {
+				weight = bus_route.distance_m / settings_.bus_velocity_kmh * TO_MINUTES;
+			}
 			edge_infos_.push_back(
 				EdgeInfo{
 					Type::Bus,
@@ -118,6 +139,14 @@ namespace transport_catalogue {
 				result.total_time_min += edge_info.edge.weight;
 			}
 			return result;
+		}
+
+		const RoutingSettings& TransportRouter::GetRoutingSettings() const {
+			return settings_;
+		}
+
+		const std::vector<TransportRouter::EdgeInfo>& TransportRouter::GetEdgeInfos() const {
+			return edge_infos_;
 		}
 
 	}

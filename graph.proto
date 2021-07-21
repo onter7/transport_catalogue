@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package transport_catalogue_serialize;
+
+message BusRoute {
+	uint32 from_stop_id = 1;
+	uint32 to_stop_id = 2;
+	uint32 bus_id = 3;
+	uint32 span_count = 4;
+	double weight = 5;
+}
