@@ -16,8 +16,6 @@ namespace transport_catalogue {
 
 	namespace transport_router {
 
-		constexpr double TO_MINUTES = 0.06;
-
 		struct RoutingSettings {
 			std::uint32_t bus_wait_time_min = 6u;
 			double bus_velocity_kmh = 40.0;
@@ -26,7 +24,7 @@ namespace transport_catalogue {
 		struct BusRoute {
 			std::string_view bus_name;
 			std::string_view from;
-			std::string_view to;			
+			std::string_view to;
 			std::size_t distance_m = 0u;
 			std::size_t span_count = 0u;
 			std::optional<double> weight;
@@ -39,6 +37,8 @@ namespace transport_catalogue {
 
 		class TransportRouter {
 		private:
+			static constexpr double TO_MINUTES = 0.06;
+
 			using Graph = graph::DirectedWeightedGraph<double>;
 
 			struct VertexInfo {
