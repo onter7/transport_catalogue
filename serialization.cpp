@@ -40,40 +40,23 @@ namespace serialization {
 		*proto_color.mutable_rgba() = std::move(proto_rgba);
 	}
 
-	Serializer::Serializer(const std::string& file_name, transport_catalogue::request_handler::RequestHandler& handler)
+	Serializer::Serializer(
+		const std::string& file_name,
+		transport_catalogue::request_handler::RequestHandler& handler,
+		transport_catalogue::TransportCatalogue& db,
+		transport_catalogue::renderer::MapRenderer& renderer,
+		transport_catalogue::transport_router::TransportRouter& router
+	)
 		: file_name_(file_name)
-		, handler_(handler) {
+		, handler_(handler)
+		, db_(db)
+		, renderer_(renderer)
+		, router_(router) {
 	}
 
 	void Serializer::SerializeTransportCatalogue() const {
 		std::ofstream out(file_name_, std::ios::binary);
-		transport_catalogue_serialize::TransportCatalogue tc;
-		const std::vector<const transport_catalogue::domain::Stop*> stops = handler_.GetStops();
-		tc.mutable_stops()->Reserve(stops.size());
-		std::unordered_map<std::string_view, std::size_t> stop_name_to_id;
-		for (std::size_t i = 0; i < stops.size(); ++i) {
-			transport_catalogue_serialize::Stop* new_proto_stop = tc.add_stops();
-			stop_name_to_id[stops[i]->name] = i;
-			SetProtoStop(*new_proto_stop, *stops[i], i);
-		}
-		const std::vector<const transport_catalogue::domain::Bus*> buses = handler_.GetBuses();
-		tc.mutable_buses()->Reserve(buses.size());
-		std::unordered_map<std::string_view, std::size_t> bus_name_to_id;
-		for (std::size_t i = 0; i < buses.size(); ++i) {
-			transport_catalogue_serialize::Bus* new_proto_bus = tc.add_buses();
-			bus_name_to_id[buses[i]->name] = i;
-			SetProtoBus(*new_proto_bus, *buses[i], stop_name_to_id, i);
-		}
-		const transport_catalogue::TransportCatalogue::StopPairsToDistances& stop_pairs_to_distances = handler_.GetStopPairsToDistances();
-		tc.mutable_distances()->Reserve(stop_pairs_to_distances.size());
-		for (const auto& [stop_pair, distance] : stop_pairs_to_distances) {
-			transport_catalogue_serialize::Distance* new_proto_distance = tc.add_distances();
-			new_proto_distance->set_from_stop_id(stop_name_to_id[stop_pair.first->name]);
-			new_proto_distance->set_to_stop_id(stop_name_to_id[stop_pair.second->name]);
-			new_proto_distance->set_distance_m(distance);
-		}
-		*tc.mutable_settings() = GetProtoRenderSettings();
-		*tc.mutable_router() = GetProtoRouter(stop_name_to_id, bus_name_to_id);
+		const transport_catalogue_serialize::TransportCatalogue tc{ GetProtoTransportCatalogue() };
 		tc.SerializeToOstream(&out);
 	}
 
@@ -85,25 +68,25 @@ namespace serialization {
 			throw std::runtime_error("Couldn't deserialize transport catalogue from file: "s + file_name_);
 		}
 		std::unordered_map<std::size_t, std::string_view> id_to_stop_name;
-		for (const auto& stop : tc.stops()) {
-			handler_.AddStop(stop.name(), { stop.coordinates().lat(), stop.coordinates().lng() });
-			id_to_stop_name[stop.id()] = handler_.GetStop(stop.name())->name;
+		for (const auto& stop : tc.bus_stop_data().stops()) {
+			db_.AddStop(stop.name(), { stop.coordinates().lat(), stop.coordinates().lng() });
+			id_to_stop_name[stop.id()] = db_.GetStop(stop.name())->name;
 		}
-		for (const auto& distance : tc.distances()) {
-			handler_.SetDistanceBetweenStops(id_to_stop_name[distance.from_stop_id()], id_to_stop_name[distance.to_stop_id()], distance.distance_m());
+		for (const auto& distance : tc.bus_stop_data().distances()) {
+			db_.SetDistanceBetweenStops(id_to_stop_name[distance.from_stop_id()], id_to_stop_name[distance.to_stop_id()], distance.distance_m());
 		}
 		std::unordered_map<std::size_t, std::string_view> id_to_bus_name;
-		for (const auto& bus : tc.buses()) {
+		for (const auto& bus : tc.bus_stop_data().buses()) {
 			std::vector<std::string_view> stop_names;
 			stop_names.reserve(bus.stop_ids().size());
 			for (const auto& stop_id : bus.stop_ids()) {
 				stop_names.push_back(id_to_stop_name[stop_id]);
 			}
-			handler_.AddBus(static_cast<transport_catalogue::domain::BusType>(bus.type()), bus.name(), stop_names);
-			id_to_bus_name[bus.id()] = handler_.GetBus(bus.name())->name;
+			db_.AddBus(static_cast<transport_catalogue::domain::BusType>(bus.type()), bus.name(), stop_names);
+			id_to_bus_name[bus.id()] = db_.GetBus(bus.name())->name;
 		}
-		handler_.SetRenderSettings(GetRenderSettings(tc.settings()));
-		handler_.SetRoutingSettings({ tc.router().settings().bus_wait_time_min(), tc.router().settings().bus_velocity_kmh() });
+		renderer_.SetRenderSettings(GetRenderSettings(tc.settings()));
+		router_.SetRoutingSettings({ tc.router().settings().bus_wait_time_min(), tc.router().settings().bus_velocity_kmh() });
 		std::vector<transport_catalogue::transport_router::BusRoute> bus_routes;
 		bus_routes.reserve(tc.router().bus_routes().size());
 		for (const auto& proto_bus_route : tc.router().bus_routes()) {
@@ -115,12 +98,45 @@ namespace serialization {
 			bus_route.weight = proto_bus_route.weight();
 			bus_routes.push_back(std::move(bus_route));
 		}
-		handler_.BuildRouter(bus_routes, handler_.GetStops(), static_cast<std::size_t>(tc.stops().size()) * 2);
+		router_.BuildRouter(bus_routes, db_.GetStops(), static_cast<std::size_t>(tc.bus_stop_data().stops().size()) * 2);
+	}
+
+	transport_catalogue_serialize::TransportCatalogue Serializer::GetProtoTransportCatalogue() const {
+		transport_catalogue_serialize::TransportCatalogue tc;
+		const std::vector<const transport_catalogue::domain::Stop*> stops = db_.GetStops();
+		transport_catalogue_serialize::BusStopData bus_stop_data;
+		bus_stop_data.mutable_stops()->Reserve(stops.size());
+		std::unordered_map<std::string_view, std::size_t> stop_name_to_id;
+		for (std::size_t i = 0u; i < stops.size(); ++i) {
+			transport_catalogue_serialize::Stop* new_proto_stop = bus_stop_data.add_stops();
+			stop_name_to_id[stops[i]->name] = i;
+			SetProtoStop(*new_proto_stop, *stops[i], i);
+		}
+		const std::vector<const transport_catalogue::domain::Bus*> buses = db_.GetBuses();
+		bus_stop_data.mutable_buses()->Reserve(buses.size());
+		std::unordered_map<std::string_view, std::size_t> bus_name_to_id;
+		for (std::size_t i = 0u; i < buses.size(); ++i) {
+			transport_catalogue_serialize::Bus* new_proto_bus = bus_stop_data.add_buses();
+			bus_name_to_id[buses[i]->name] = i;
+			SetProtoBus(*new_proto_bus, *buses[i], stop_name_to_id, i);
+		}
+		const transport_catalogue::TransportCatalogue::StopPairsToDistances& stop_pairs_to_distances = db_.GetStopPairsToDistances();
+		bus_stop_data.mutable_distances()->Reserve(stop_pairs_to_distances.size());
+		for (const auto& [stop_pair, distance] : stop_pairs_to_distances) {
+			transport_catalogue_serialize::Distance* new_proto_distance = bus_stop_data.add_distances();
+			new_proto_distance->set_from_stop_id(stop_name_to_id[stop_pair.first->name]);
+			new_proto_distance->set_to_stop_id(stop_name_to_id[stop_pair.second->name]);
+			new_proto_distance->set_distance_m(distance);
+		}
+		*tc.mutable_bus_stop_data() = std::move(bus_stop_data);
+		*tc.mutable_settings() = GetProtoRenderSettings();
+		*tc.mutable_router() = GetProtoRouter(stop_name_to_id, bus_name_to_id);
+		return tc;
 	}
 
 	transport_catalogue_serialize::RenderSettings Serializer::GetProtoRenderSettings() const {
 		transport_catalogue_serialize::RenderSettings proto_settings;
-		const auto& settings = handler_.GetRenderSettings();
+		const auto& settings = renderer_.GetRenderSettings();
 		proto_settings.set_width(settings.width);
 		proto_settings.set_height(settings.height);
 		proto_settings.set_padding(settings.padding);
@@ -181,11 +197,11 @@ namespace serialization {
 		using namespace std::literals;
 		transport_catalogue_serialize::TransportRouter router;
 		transport_catalogue_serialize::RoutingSettings proto_settings;
-		const auto& settings = handler_.GetRoutingSettings();
+		const auto& settings = router_.GetRoutingSettings();
 		proto_settings.set_bus_wait_time_min(settings.bus_wait_time_min);
 		proto_settings.set_bus_velocity_kmh(settings.bus_velocity_kmh);
 		*router.mutable_settings() = std::move(proto_settings);
-		const auto& edge_infos = handler_.GetEdgeInfos();
+		const auto& edge_infos = router_.GetEdgeInfos();
 		for (const auto& edge_info : edge_infos) {
 			transport_catalogue_serialize::BusRoute* bus_route = router.add_bus_routes();
 			if (edge_info.type == transport_catalogue::transport_router::TransportRouter::Type::Bus) {

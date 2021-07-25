@@ -133,8 +133,16 @@ namespace transport_catalogue {
 			}
 		}
 
-		JsonReader::JsonReader(request_handler::RequestHandler& handler)
-			: handler_(handler) {
+		JsonReader::JsonReader(
+			request_handler::RequestHandler& handler,
+			TransportCatalogue& db,
+			renderer::MapRenderer& renderer,
+			transport_router::TransportRouter& router
+		)
+			: handler_(handler)
+			, db_(db)
+			, renderer_(renderer)
+			, router_(router) {
 		}
 
 		void JsonReader::UpdateDatabase(const json::Document& doc) {
@@ -162,14 +170,14 @@ namespace transport_catalogue {
 		void JsonReader::AddStops(const std::list<const json::Node*>& stop_nodes) {
 			for (const auto stop : stop_nodes) {
 				const json::Dict& stop_dict = stop->AsDict();
-				handler_.AddStop(stop_dict.at("name"s).AsString(), { stop_dict.at("latitude"s).AsDouble(), stop_dict.at("longitude"s).AsDouble() });
+				db_.AddStop(stop_dict.at("name"s).AsString(), { stop_dict.at("latitude"s).AsDouble(), stop_dict.at("longitude"s).AsDouble() });
 			}
 			for (const auto stop : stop_nodes) {
 				const json::Dict& stop_dict = stop->AsDict();
 				const std::string_view from = stop_dict.at("name"s).AsString();
 				if (stop_dict.count("road_distances"s)) {
 					for (const auto& [to, distance_m] : stop_dict.at("road_distances"s).AsDict()) {
-						handler_.SetDistanceBetweenStops(from, to, static_cast<std::size_t>(distance_m.AsInt()));
+						db_.SetDistanceBetweenStops(from, to, static_cast<std::size_t>(distance_m.AsInt()));
 					}
 				}
 			}
@@ -187,7 +195,7 @@ namespace transport_catalogue {
 				const domain::BusType bus_type = bus_dict.at("is_roundtrip"s).AsBool()
 					? domain::BusType::CIRCULAR
 					: domain::BusType::DIRECT;
-				handler_.AddBus(bus_type, bus_dict.at("name"s).AsString(), stop_names);
+				db_.AddBus(bus_type, bus_dict.at("name"s).AsString(), stop_names);
 			}
 		}
 
@@ -196,12 +204,12 @@ namespace transport_catalogue {
 			UpdateDatabase(doc);
 			const json::Dict& all_requests = doc.GetRoot().AsDict();
 			if (all_requests.count("render_settings"s)) {
-				handler_.SetRenderSettings(GetRenderSettings(all_requests.at("render_settings"s).AsDict()));
+				renderer_.SetRenderSettings(GetRenderSettings(all_requests.at("render_settings"s).AsDict()));
 			}
 			if (all_requests.count("routing_settings"s)) {
-				handler_.SetRoutingSettings(GetRoutingSettings(all_requests.at("routing_settings"s).AsDict()));
+				router_.SetRoutingSettings(GetRoutingSettings(all_requests.at("routing_settings"s).AsDict()));
 			}
-			handler_.BuildRouter();
+			router_.BuildRouter();
 			if (all_requests.count("serialization_settings"s)) {
 				const std::string file_name = all_requests.at("serialization_settings"s).AsDict().at("file"s).AsString();
 				SerializeTransportCatalogue(file_name);
@@ -262,8 +270,8 @@ namespace transport_catalogue {
 
 		json::Dict JsonReader::GetMap(const json::Dict& map_request) const {
 			const int request_id = map_request.at("id"s).AsInt();
-			auto stops_to_bus_counts{ handler_.GetStopsToBuses() };
-			auto buses{ handler_.GetBuses() };
+			auto stops_to_bus_counts{ db_.GetStopsToBusCounts() };
+			auto buses{ db_.GetBuses() };
 			return std::visit(ResponseConverter{}, JsonResponse{ Map{ request_id, handler_.RenderMap(stops_to_bus_counts, buses) } });
 		}
 
@@ -331,12 +339,12 @@ namespace transport_catalogue {
 		}
 
 		void JsonReader::SerializeTransportCatalogue(const std::string& file_name) const {
-			serialization::Serializer serializer(file_name, handler_);
+			serialization::Serializer serializer(file_name, handler_, db_, renderer_, router_);
 			serializer.SerializeTransportCatalogue();
 		}
 
 		void JsonReader::DeserializeTransportCatalogue(const std::string& file_name) const {
-			serialization::Serializer serializer(file_name, handler_);
+			serialization::Serializer serializer(file_name, handler_, db_, renderer_, router_);
 			serializer.DeserializeTransportCatalogue();
 		}
 

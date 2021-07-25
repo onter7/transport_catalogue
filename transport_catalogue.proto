@@ -33,10 +33,14 @@ message Distance {
 	uint32 distance_m = 3;
 }
 
-message TransportCatalogue {
+message BusStopData {
 	repeated Stop stops = 1;
 	repeated Bus buses = 2;
 	repeated Distance distances = 3;
-	RenderSettings settings = 4;
-	TransportRouter router = 5;
+}
+
+message TransportCatalogue {
+	BusStopData bus_stop_data = 1;
+	RenderSettings settings = 2;
+	TransportRouter router = 3;
 }

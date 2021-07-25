@@ -12,42 +12,6 @@ namespace transport_catalogue {
 			, router_(router) {
 		}
 
-		void RequestHandler::AddStop(const std::string_view stop_name, const geo::Coordinates& coordinates) {
-			db_.AddStop(stop_name, coordinates);
-		}
-
-		void RequestHandler::AddBus(const domain::BusType type, const std::string_view bus_name, const std::vector<std::string_view>& stop_names) {
-			db_.AddBus(type, bus_name, stop_names);
-		}
-
-		std::vector<std::pair<const domain::Stop*, std::size_t>> RequestHandler::GetStopsToBuses() const {
-			return db_.GetStopsToBusCounts();
-		}
-
-		std::vector<const domain::Bus*> RequestHandler::GetBuses() const {
-			return db_.GetBuses();
-		}
-
-		std::vector<const domain::Stop*> RequestHandler::GetStops() const {
-			return db_.GetStops();
-		}
-
-		const domain::Stop* RequestHandler::GetStop(const std::string_view stop_name) const {
-			return db_.GetStop(stop_name);
-		}
-
-		const domain::Bus* RequestHandler::GetBus(const std::string_view bus_name) const {
-			return db_.GetBus(bus_name);
-		}
-
-		const TransportCatalogue::StopPairsToDistances& RequestHandler::GetStopPairsToDistances() const {
-			return db_.GetStopPairsToDistances();
-		}
-
-		void RequestHandler::SetDistanceBetweenStops(const std::string_view from, const std::string_view to, const std::size_t distance_m) {
-			db_.SetDistanceBetweenStops(from, to, distance_m);
-		}
-
 		std::optional<domain::BusStat> RequestHandler::GetBusStat(const std::string_view& bus_name) const {
 			return db_.GetBusStat(bus_name);
 		}
@@ -56,40 +20,12 @@ namespace transport_catalogue {
 			return db_.GetBusesByStop(stop_name);
 		}
 
-		void RequestHandler::SetRenderSettings(const renderer::RenderSettings& settings) {
-			renderer_.SetRenderSettings(settings);
-		}
-
-		const renderer::RenderSettings& RequestHandler::GetRenderSettings() const {
-			return renderer_.GetRenderSettings();
-		}
-
 		svg::Document RequestHandler::RenderMap(std::vector<std::pair<const domain::Stop*, std::size_t>>& stops_to_bus_counts, std::vector<const domain::Bus*>& buses) const {
 			return renderer_.RenderMap(stops_to_bus_counts, buses);
 		}
 
-		void RequestHandler::SetRoutingSettings(const transport_router::RoutingSettings& settings) {
-			router_.SetRoutingSettings(settings);
-		}
-
-		void RequestHandler::BuildRouter() {
-			router_.BuildRouter();
-		}
-
-		void RequestHandler::BuildRouter(const std::vector<transport_catalogue::transport_router::BusRoute>& bus_routes, const std::vector<const domain::Stop*>& stops, const std::size_t vertex_count) {
-			router_.BuildRouter(bus_routes, stops, vertex_count);
-		}
-
 		std::optional<domain::RouteStat> RequestHandler::GetRoute(const std::string_view from, const std::string_view to) const {
 			return router_.GetRoute(from, to);
-		}
-
-		const transport_router::RoutingSettings& RequestHandler::GetRoutingSettings() const {
-			return router_.GetRoutingSettings();
-		}
-
-		const std::vector<transport_router::TransportRouter::EdgeInfo>& RequestHandler::GetEdgeInfos() const {
-			return router_.GetEdgeInfos();
 		}
 
 	}

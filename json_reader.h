@@ -63,11 +63,19 @@ namespace transport_catalogue {
 
 		class JsonReader final {
 		public:
-			explicit JsonReader(request_handler::RequestHandler& handler);
+			explicit JsonReader(
+				request_handler::RequestHandler& handler,
+				TransportCatalogue& db,
+				renderer::MapRenderer& renderer,
+				transport_router::TransportRouter& router
+			);
 			void ProcessRequests(std::istream& input = std::cin, std::ostream& output = std::cout);
 			void MakeBase(std::istream& input = std::cin);
 		private:
 			request_handler::RequestHandler& handler_;
+			TransportCatalogue& db_;
+			renderer::MapRenderer& renderer_;
+			transport_router::TransportRouter& router_;
 
 			void UpdateDatabase(const json::Document& doc);
 			void AddStops(const std::list<const json::Node*>& stop_nodes);

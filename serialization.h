@@ -21,11 +21,20 @@ namespace serialization {
 
 	class Serializer {
 	public:
-		explicit Serializer(const std::string& file_name, transport_catalogue::request_handler::RequestHandler& handler);
+		explicit Serializer(
+			const std::string& file_name,
+			transport_catalogue::request_handler::RequestHandler& handler,
+			transport_catalogue::TransportCatalogue& db,
+			transport_catalogue::renderer::MapRenderer& renderer,
+			transport_catalogue::transport_router::TransportRouter& router
+		);
 		void SerializeTransportCatalogue() const;
 		void DeserializeTransportCatalogue();
 	private:
 		transport_catalogue::request_handler::RequestHandler& handler_;
+		transport_catalogue::TransportCatalogue& db_;
+		transport_catalogue::renderer::MapRenderer& renderer_;
+		transport_catalogue::transport_router::TransportRouter& router_;
 		std::string file_name_;
 
 		static void SetProtoStop(
@@ -41,6 +50,8 @@ namespace serialization {
 		);
 		static void SetColor(svg::Color& color, const transport_catalogue_serialize::Color& proto_color);
 		static transport_catalogue::renderer::RenderSettings GetRenderSettings(const transport_catalogue_serialize::RenderSettings& proto_settings);
+
+		transport_catalogue_serialize::TransportCatalogue GetProtoTransportCatalogue() const;
 
 		transport_catalogue_serialize::RenderSettings GetProtoRenderSettings() const;
 

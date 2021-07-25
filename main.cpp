@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     transport_catalogue::renderer::MapRenderer renderer;
     transport_catalogue::transport_router::TransportRouter transport_router{ db };
     transport_catalogue::request_handler::RequestHandler handler{ db, renderer, transport_router };
-    transport_catalogue::json_reader::JsonReader reader{ handler };
+    transport_catalogue::json_reader::JsonReader reader{ handler, db, renderer, transport_router };
 
     if (mode == "make_base"sv) {
         reader.MakeBase();
