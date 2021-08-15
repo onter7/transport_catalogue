@@ -1,4 +1,5 @@
 # Transport Catalogue
+![Alt text](https://github.com/onter7/transport_catalogue/blob/master/transport_catalogue.svg)
 A program for building a bus traffic scheme and finding optimal routes 
 
 Supports:
