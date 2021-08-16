@@ -18,7 +18,7 @@ Requests are transmitted via standard I/O in JSON format. The map is built in SV
 The project supports building using CMake. 
 
 External dependencies: 
-- Protobuf - specify the path to Protobuf as follows ```$cmake <path_to_transport_catalogue> -DCMAKE_PREFIX_PATH=<path_to_protobuf>```
+- **Protobuf** - specify the path to Protobuf as follows ```$cmake <path_to_transport_catalogue> -DCMAKE_PREFIX_PATH=<path_to_protobuf>```
 
 ## Example
 
